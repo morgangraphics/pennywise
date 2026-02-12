@@ -166,9 +166,12 @@ class TestParsingCaDocx:
         parser.new_only = False
         all_rows = parser.parse_docx_to_rows(str(ca_docx_path))
 
-        # Add some to database
+        # Add some to database, normalizing keys to lowercase
         if len(all_rows) > 0:
-            parser.db.add_penny(all_rows[0])
+            penny_to_add = {
+                k.lower(): v for k, v in all_rows[0].items()
+            }
+            parser.db.add_penny(penny_to_add)
 
         # Second parse with new_only: should get fewer pennies
         parser.new_only = True
@@ -214,7 +217,7 @@ class TestH2H3MapBuilder:
         has_h3_false = sum(1 for v in h2_h3_map.values() if v is False)
 
         # Should have at least some of each
-        assert has_h3_true > 0 or has_h3_false > 0
+        assert has_h3_true > 0 and has_h3_false > 0
 
 
 class TestRowsFromVerticalPairs:
@@ -243,11 +246,11 @@ class TestRowsFromVerticalPairs:
             assert len(pair) == 3  # (cell1, cell2, position)
 
     def test_vertical_pairs_skips_spacer_columns(self, parser, temp_dir):
-        """Test that even-indexed columns (spacers) are skipped."""
+        """Test that odd-indexed columns (spacers) are skipped."""
         from docx import Document
 
         doc = Document()
-        # 7-column format: col0=data, col1=spacer, col2=data, col3=spacer, etc
+        # 7-column format: col0=data, col1=spacer, col2=data, col3=spacer, col4=data, col5=spacer, col6=data
         doc.add_table(rows=2, cols=7)
 
         docx_path = Path(temp_dir) / "test_spacer.docx"

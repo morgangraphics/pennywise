@@ -174,10 +174,10 @@ class TestGetPennies:
         sample_penny_dict["Year"] = "2024"  # Use uppercase for CSV field
         temp_db.add_penny(sample_penny_dict)
 
-        # Year is stored as string, so query as string
-        cursor = temp_db.conn.execute("SELECT * FROM pennies WHERE year = ?", ("2024",))
-        rows = cursor.fetchall()
-        assert len(rows) >= 0  # May or may not have pennies from this year
+        # Use the public API to retrieve pennies by year
+        pennies = temp_db.get_pennies_by_year("2024")
+        # After inserting one penny for 2024 into an otherwise empty DB, we expect exactly one result
+        assert len(pennies) == 1
 
     def test_get_new_pennies_since(self, temp_db, sample_penny_dict):
         """Test retrieving newly added pennies - tests the method works."""

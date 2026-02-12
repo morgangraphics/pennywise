@@ -47,7 +47,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with correct input argument
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", False, False, False
+                "test.docx", "output.csv", append_loc=False, new_only=False, multi_line_dash=False
             )
 
     def test_output_short_form(self, mock_parser_and_path):
@@ -62,7 +62,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with correct arguments
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", False, False, False
+                "test.docx", "output.csv", append_loc=False, new_only=False, multi_line_dash=False
             )
 
     def test_short_location_flag(self, mock_parser_and_path):
@@ -82,7 +82,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with short_loc=True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", True, False, False
+                "test.docx", "output.csv", append_loc=True, new_only=False, multi_line_dash=False
             )
 
     def test_multi_line_dash_flag(self, mock_parser_and_path):
@@ -97,7 +97,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with multi_line_dash=True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", False, True, False
+                "test.docx", "output.csv", append_loc=False, new_only=False, multi_line_dash=True
             )
 
     def test_new_only_flag(self, mock_parser_and_path):
@@ -112,7 +112,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with new_only=True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", False, False, True
+                "test.docx", "output.csv", append_loc=False, new_only=True, multi_line_dash=False
             )
 
     def test_all_flags_together(self, mock_parser_and_path):
@@ -137,7 +137,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with all flags set to True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", True, True, True
+                "test.docx", "output.csv", append_loc=True, new_only=True, multi_line_dash=True
             )
 
     def test_long_form_arguments(self, mock_parser_and_path):
@@ -162,7 +162,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with all flags set to True using long form
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", True, True, True
+                "test.docx", "output.csv", append_loc=True, new_only=True, multi_line_dash=True
             )
 
     def test_help_flag(self):

@@ -20,7 +20,7 @@ install:
 
 # Install development dependencies (includes runtime deps)
 install-dev: install
-	pip install pyinstaller pytest
+	pip install pyinstaller pytest black
 
 # Clean build artifacts
 clean:
@@ -53,7 +53,7 @@ test: build
 	@echo "Test complete! Check test_output.csv"
 
 # Run pytest test suite
-pytest: build
+pytest:
 	python -m pytest tests/ -v
 
 # Format code with Black

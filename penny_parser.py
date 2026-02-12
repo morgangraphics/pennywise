@@ -1065,7 +1065,11 @@ def main():
     else:
         # Process single file
         penny_parser.run(
-            args.input, args.output, args.short_loc, args.multi_line_dash, args.new_only
+            args.input,
+            args.output,
+            append_loc=args.short_loc,
+            new_only=args.new_only,
+            multi_line_dash=args.multi_line_dash,
         )
 
 
