@@ -1,8 +1,6 @@
 """Tests for command-line interface."""
 
 import pytest
-from pathlib import Path
-import argparse
 from penny_parser import PennyParser
 
 
