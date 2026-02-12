@@ -1,6 +1,5 @@
 """Tests for PennyParser class - state parsing and retired detection."""
 
-import pytest
 from pathlib import Path
 from docx import Document
 from docx.oxml.ns import qn
