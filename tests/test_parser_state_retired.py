@@ -3,7 +3,6 @@
 import pytest
 from pathlib import Path
 from docx import Document
-from docx.shared import RGBColor
 from docx.oxml.ns import qn
 
 
