@@ -20,7 +20,8 @@ install:
 
 # Install development dependencies (includes runtime deps)
 install-dev: install
-	pip install pyinstaller pytest black
+	pip install -r requirements.txt
+	pip install -r requirements-dev.txt
 
 # Clean build artifacts
 clean:

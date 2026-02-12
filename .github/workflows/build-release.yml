@@ -23,7 +23,7 @@ jobs:
           python-version: '3.11'
       
       - name: Install dependencies
-        run: make install
+        run: make install && make install-dev
       
       - name: Build release
         run: make release
