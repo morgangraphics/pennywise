@@ -2,7 +2,6 @@
 
 import pytest
 from pathlib import Path
-from penny_parser import PennyParser
 import csv
 
 

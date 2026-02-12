@@ -43,9 +43,7 @@ class TestArgumentParsing:
 
     def test_input_short_form(self, mock_parser_and_path):
         """Test -i short form for input."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
@@ -60,9 +58,7 @@ class TestArgumentParsing:
 
     def test_output_short_form(self, mock_parser_and_path):
         """Test -o short form for output."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
@@ -77,9 +73,11 @@ class TestArgumentParsing:
 
     def test_short_location_flag(self, mock_parser_and_path):
         """Test -sl / --short-location flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
+
+        # Test that -sl flag is recognized and sets short_loc to True
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-sl"])
+        assert args.short_loc is True
 
         with patch.object(
             sys,
@@ -94,9 +92,7 @@ class TestArgumentParsing:
 
     def test_multi_line_dash_flag(self, mock_parser_and_path):
         """Test -mld / --multi-line-dash flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
@@ -111,9 +107,7 @@ class TestArgumentParsing:
 
     def test_new_only_flag(self, mock_parser_and_path):
         """Test -n / --new-only flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
