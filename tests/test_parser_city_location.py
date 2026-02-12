@@ -1,7 +1,5 @@
 """Tests for PennyParser class - city/location/neighborhood detection."""
 
-import pytest
-
 
 class TestDetectCityLocationNeighborhood:
     """Test the detect_city_location_neighborhood method."""
