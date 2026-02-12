@@ -984,10 +984,15 @@ class PennyParser:
         )
 
 
-def main():
+def parse_arguments(args=None):
     """
-    Main entry point for the CLI.
-    Uses argparse to collect command line arguments and perform parsing.
+    Parse command-line arguments.
+    
+    Args:
+        args: List of argument strings to parse. If None, uses sys.argv.
+    
+    Returns:
+        Namespace object containing parsed arguments.
     """
     parser = argparse.ArgumentParser(
         description="Parse a pressed-penny DOCX file into a normalized CSV."
@@ -1028,7 +1033,15 @@ def main():
         help="Only extract pennies not already in the database",
     )
 
-    args = parser.parse_args()
+    return parser.parse_args(args)
+
+
+def main():
+    """
+    Main entry point for the CLI.
+    Uses argparse to collect command line arguments and perform parsing.
+    """
+    args = parse_arguments()
 
     penny_parser = PennyParser()
 

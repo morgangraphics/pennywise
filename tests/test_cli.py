@@ -5,6 +5,17 @@ from pathlib import Path
 from penny_parser import PennyParser
 
 
+@pytest.fixture
+def mock_parser_and_path():
+    """Fixture to mock PennyParser and Path for CLI testing."""
+    with patch("penny_parser.PennyParser") as mock_parser_class:
+        mock_parser = MagicMock()
+        mock_parser_class.return_value = mock_parser
+        with patch("penny_parser.Path") as mock_path:
+            mock_path.return_value.is_dir.return_value = False
+            yield mock_parser
+
+
 class TestArgumentParsing:
     """Test command-line argument parsing."""
 
@@ -28,77 +39,86 @@ class TestArgumentParsing:
             with pytest.raises(SystemExit):
                 main()
 
-    def test_input_short_form(self):
+    def test_input_short_form(self, mock_parser_and_path):
         """Test -i short form for input."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        # We can't fully test without a real file, but we can test parsing
         with patch.object(
             sys,
             "argv",
             ["penny_parser.py", "-i", "test.docx", "-o", "output.csv"],
         ):
-            # Would fail at file check, so we mock the file existence
-            with patch("pathlib.Path.exists", return_value=False):
-                # Since file doesn't exist, parser will exit
-                # This is expected behavior
-                pass
+            main()
+            # Verify run was called with correct input argument
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", False, False, False
+            )
 
-    def test_output_short_form(self):
+    def test_output_short_form(self, mock_parser_and_path):
         """Test -o short form for output."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
             "argv",
             ["penny_parser.py", "-i", "test.docx", "-o", "output.csv"],
         ):
-            pass  # Argument parsing succeeded
+            main()
+            # Verify run was called with correct arguments
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", False, False, False
+            )
 
-    def test_short_location_flag(self):
+    def test_short_location_flag(self, mock_parser_and_path):
         """Test -sl / --short-location flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
+
+        # Test that -sl flag is recognized and sets short_loc to True
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-sl"])
+        assert args.short_loc is True
 
         with patch.object(
             sys,
             "argv",
             ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-sl"],
         ):
-            pass  # Argument parsing succeeded
+            main()
+            # Verify run was called with short_loc=True
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", True, False, False
+            )
 
-    def test_multi_line_dash_flag(self):
+    def test_multi_line_dash_flag(self, mock_parser_and_path):
         """Test -mld / --multi-line-dash flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
             "argv",
             ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-mld"],
         ):
-            pass  # Argument parsing succeeded
+            main()
+            # Verify run was called with multi_line_dash=True
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", False, True, False
+            )
 
-    def test_new_only_flag(self):
+    def test_new_only_flag(self, mock_parser_and_path):
         """Test -n / --new-only flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
         with patch.object(
             sys,
             "argv",
             ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-n"],
         ):
-            pass  # Argument parsing succeeded
+            main()
+            # Verify run was called with new_only=True
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", False, False, True
+            )
 
-    def test_all_flags_together(self):
+    def test_all_flags_together(self, mock_parser_and_path):
         """Test using all flags together."""
         from penny_parser import main
         import sys
@@ -118,9 +138,13 @@ class TestArgumentParsing:
                 "-n",
             ],
         ):
-            pass  # Argument parsing succeeded
+            main()
+            # Verify run was called with all flags set to True
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", True, True, True
+            )
 
-    def test_long_form_arguments(self):
+    def test_long_form_arguments(self, mock_parser_and_path):
         """Test using long form of arguments."""
         from penny_parser import main
         import sys
@@ -140,7 +164,11 @@ class TestArgumentParsing:
                 "--new-only",
             ],
         ):
-            pass  # Argument parsing succeeded
+            main()
+            # Verify run was called with all flags set to True using long form
+            mock_parser_and_path.run.assert_called_once_with(
+                "test.docx", "output.csv", True, True, True
+            )
 
     def test_help_flag(self):
         """Test -h / --help flag shows help."""
