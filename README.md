@@ -44,8 +44,11 @@ The hierarchy is defined by using Word's built in header functionality
 and is broken down like:
 
 Heading 1 = City
+
 Heading 2 = Neighborhood or Location
+
 Heading 3 = Location
+
 Heading 4 = Year
 
 ![Document Map With Headers](images/document_w_headers.png)
@@ -89,7 +92,7 @@ I label all of my coins. I use [elongated coin flips from Coin Supply Express](h
 
 ![Flip with Labels](images/flip_with_labels.png)
 
-Each label in the ca.docx word doc consists of a top and bottom. These labels can be customized to your needs spacing, colors, fonts, font sizes, etc. Whatever your desires. 
+Each label in the ca.docx word doc consists of a top and bottom. These labels can be customized to your needs spacing, colors, fonts, font sizes, etc. Whatever you desire. 
 
 ### Position
 Coin position is a judgement call, especially for wheels where there is no labeled order. For me, whatever is first listed on the websites I use for verification/labeling tends to be the first position. I personally maintain positioning when dealing with incomplete sets. It helps me target the things I've missed if/when I get back to the machine. The labeling methodology lends itself well to maintaining positioning. The following image details positions.
