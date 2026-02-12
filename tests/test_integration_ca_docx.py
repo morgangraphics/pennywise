@@ -242,7 +242,7 @@ class TestRowsFromVerticalPairs:
 
         doc = Document()
         # 7-column format: col0=data, col1=spacer, col2=data, col3=spacer, etc
-        table = doc.add_table(rows=2, cols=7)
+        doc.add_table(rows=2, cols=7)
 
         docx_path = Path(temp_dir) / "test_spacer.docx"
         doc.save(str(docx_path))
