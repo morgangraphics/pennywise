@@ -150,7 +150,6 @@ class TestNormalizeCellText:
 
         doc = Document()
         table = doc.add_table(rows=1, cols=1)
-        cell = table.rows[0].cells[0]
 
         docx_path = Path(temp_dir) / "test_empty_cell.docx"
         doc.save(str(docx_path))
