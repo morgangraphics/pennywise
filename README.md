@@ -158,7 +158,7 @@ To get a list of all available flags:
 ## Features
 
 ### Word Specific Unicode Characters
-Word does some thing well, however, those things don't always translate well outside of Word. The script will attempt to normalize Word specific Unicode characters (e.g. Quotes, ", '), to their ASCII equivalent so they are universal. 
+Word does some things well, however, those things don't always translate well outside of Word. The script will attempt to normalize Word specific Unicode characters (e.g. Quotes, ", '), to their ASCII equivalent so they are universal. 
 
 ### Process All Documents In A Directory
 The script has the ability to process all documents in a folder. This should make things easier when looking for all the new entries when adding to the collection
