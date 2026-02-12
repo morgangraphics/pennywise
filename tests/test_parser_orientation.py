@@ -1,7 +1,6 @@
 """Tests for PennyParser class - orientation and type detection."""
 
 
-
 class TestDetectOrientationAndType:
     """Test the detect_orientation_and_type method."""
 

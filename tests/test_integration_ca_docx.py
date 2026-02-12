@@ -22,9 +22,7 @@ class TestParsingCaDocx:
         assert isinstance(rows, list)
         assert len(rows) > 0
 
-    def test_parse_ca_docx_all_rows_have_required_fields(
-        self, parser, ca_docx_path
-    ):
+    def test_parse_ca_docx_all_rows_have_required_fields(self, parser, ca_docx_path):
         """Test that all rows have required CSV fields."""
         rows = parser.parse_docx_to_rows(str(ca_docx_path))
         required_fields = [
@@ -72,9 +70,10 @@ class TestParsingCaDocx:
         """Test that orientations are h or v."""
         rows = parser.parse_docx_to_rows(str(ca_docx_path))
         for row in rows:
-            assert row["Orientation"] in ["h", "v"], (
-                f"Invalid orientation: {row['Orientation']}"
-            )
+            assert row["Orientation"] in [
+                "h",
+                "v",
+            ], f"Invalid orientation: {row['Orientation']}"
 
     def test_parse_ca_docx_has_types(self, parser, ca_docx_path):
         """Test that all rows have type values."""
@@ -96,13 +95,21 @@ class TestParsingCaDocx:
         """Test that unicode characters are sanitized."""
         rows = parser.parse_docx_to_rows(str(ca_docx_path))
         # List of problematic unicode characters that should be sanitized
-        problematic_chars = ['\u2013', '\u2014', '\u201c', '\u201d', '\u00ae', '\u2122', '\u00a9']
+        problematic_chars = [
+            "\u2013",
+            "\u2014",
+            "\u201c",
+            "\u201d",
+            "\u00ae",
+            "\u2122",
+            "\u00a9",
+        ]
         for row in rows:
             for field in ["Name", "Location", "Neighborhood", "City"]:
                 for char in problematic_chars:
-                    assert char not in row[field], (
-                        f"Found unsanitized char '{char}' in {field}: {row[field]}"
-                    )
+                    assert (
+                        char not in row[field]
+                    ), f"Found unsanitized char '{char}' in {field}: {row[field]}"
 
     def test_parse_ca_docx_no_newlines(self, parser, ca_docx_path):
         """Test that newlines are removed from fields."""

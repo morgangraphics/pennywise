@@ -42,7 +42,9 @@ class TestHashPenny:
         hash2 = temp_db._hash_penny(sample_penny_dict)
         assert hash1 == hash2
 
-    def test_hash_penny_different_for_different_pennies(self, temp_db, sample_penny_dict):
+    def test_hash_penny_different_for_different_pennies(
+        self, temp_db, sample_penny_dict
+    ):
         """Test that different pennies produce different hashes."""
         penny1 = sample_penny_dict.copy()
         penny2 = sample_penny_dict.copy()
@@ -126,7 +128,9 @@ class TestAddAndCheckPenny:
 
         # Verify the hash matches
         hash_val = temp_db._hash_penny(sample_penny_dict)
-        cursor = temp_db.conn.execute("SELECT * FROM pennies WHERE hash = ?", (hash_val,))
+        cursor = temp_db.conn.execute(
+            "SELECT * FROM pennies WHERE hash = ?", (hash_val,)
+        )
         row = cursor.fetchone()
         assert row is not None
 
@@ -180,10 +184,10 @@ class TestGetPennies:
         # This test validates the method exists and executes without error
         # Timestamp comparison can be affected by database timezone handling
         before_time = datetime.now() - timedelta(hours=1)
-        
+
         # Add a penny
         temp_db.add_penny(sample_penny_dict)
-        
+
         # Method should execute and return a list (may be empty or have results)
         pennies = temp_db.get_new_pennies_since(before_time)
         assert isinstance(pennies, list)

@@ -11,15 +11,12 @@ Usage:
 
 import csv
 import argparse
-import json
 import mimetypes
 import re
 import logging
 from pathlib import Path
 from docx import Document
 from docx.oxml.ns import qn
-from collections import defaultdict
-from json import loads, dumps
 from penny_database import PennyDatabase
 
 
@@ -729,8 +726,6 @@ class PennyParser:
                 if cell_data.get("Year"):
                     current_set += 1
 
-                num_of_rows = len(table.rows)
-
                 # Process all vertically paired rows
                 for cell1, cell2, position in self.rows_from_vertical_pairs(table):
 
@@ -797,7 +792,7 @@ class PennyParser:
 
                         if stor_hash in position_stor:
                             self.logger.debug(
-                                f"Duplicate detected: Same Location/Name/Orientation with different Type (likely Copper vs Zinc Penny)"
+                                "Duplicate detected: Same Location/Name/Orientation with different Type (likely Copper vs Zinc Penny)"
                             )
                             position = position_stor.get(stor_hash)
 
@@ -987,10 +982,10 @@ class PennyParser:
 def parse_arguments(args=None):
     """
     Parse command-line arguments.
-    
+
     Args:
         args: List of argument strings to parse. If None, uses sys.argv.
-    
+
     Returns:
         Namespace object containing parsed arguments.
     """

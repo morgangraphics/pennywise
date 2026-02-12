@@ -1,7 +1,6 @@
 """Tests for command-line interface."""
 
 import pytest
-from penny_parser import PennyParser
 import sys
 from unittest.mock import patch, MagicMock
 
@@ -23,8 +22,6 @@ class TestArgumentParsing:
     def test_required_input_argument(self):
         """Test that --input is required."""
         from penny_parser import main
-        import sys
-        from unittest.mock import patch
 
         with patch.object(sys, "argv", ["penny_parser.py"]):
             with pytest.raises(SystemExit):
@@ -33,8 +30,6 @@ class TestArgumentParsing:
     def test_required_output_argument(self):
         """Test that --output is required."""
         from penny_parser import main
-        import sys
-        from unittest.mock import patch
 
         with patch.object(sys, "argv", ["penny_parser.py", "-i", "input.docx"]):
             with pytest.raises(SystemExit):
@@ -42,7 +37,7 @@ class TestArgumentParsing:
 
     def test_input_short_form(self, mock_parser_and_path):
         """Test -i short form for input."""
-        from penny_parser import parse_arguments
+        from penny_parser import main
 
         with patch.object(
             sys,
@@ -57,7 +52,7 @@ class TestArgumentParsing:
 
     def test_output_short_form(self, mock_parser_and_path):
         """Test -o short form for output."""
-        from penny_parser import parse_arguments
+        from penny_parser import main
 
         with patch.object(
             sys,
@@ -72,6 +67,7 @@ class TestArgumentParsing:
 
     def test_short_location_flag(self, mock_parser_and_path):
         """Test -sl / --short-location flag."""
+        from penny_parser import main
         from penny_parser import parse_arguments
 
         # Test that -sl flag is recognized and sets short_loc to True
@@ -91,7 +87,7 @@ class TestArgumentParsing:
 
     def test_multi_line_dash_flag(self, mock_parser_and_path):
         """Test -mld / --multi-line-dash flag."""
-        from penny_parser import parse_arguments
+        from penny_parser import main
 
         with patch.object(
             sys,
@@ -106,7 +102,7 @@ class TestArgumentParsing:
 
     def test_new_only_flag(self, mock_parser_and_path):
         """Test -n / --new-only flag."""
-        from penny_parser import parse_arguments
+        from penny_parser import main
 
         with patch.object(
             sys,
@@ -122,7 +118,6 @@ class TestArgumentParsing:
     def test_all_flags_together(self, mock_parser_and_path):
         """Test using all flags together."""
         from penny_parser import main
-        import sys
         from unittest.mock import patch
 
         with patch.object(
@@ -148,7 +143,6 @@ class TestArgumentParsing:
     def test_long_form_arguments(self, mock_parser_and_path):
         """Test using long form of arguments."""
         from penny_parser import main
-        import sys
         from unittest.mock import patch
 
         with patch.object(
@@ -174,7 +168,6 @@ class TestArgumentParsing:
     def test_help_flag(self):
         """Test -h / --help flag shows help."""
         from penny_parser import main
-        import sys
         from unittest.mock import patch
 
         with patch.object(sys, "argv", ["penny_parser.py", "-h"]):

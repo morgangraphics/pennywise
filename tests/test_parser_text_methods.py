@@ -56,9 +56,9 @@ class TestSanitizeForCsv:
     def test_sanitize_smart_quotes(self, parser):
         """Test conversion of smart quotes."""
         # Using unicode escape sequences to avoid syntax errors
-        result = parser.sanitize_for_csv('It\u2019s \u201cMusée Mécanique\u201d')
-        assert '\u201c' not in result
-        assert '\u201d' not in result
+        result = parser.sanitize_for_csv("It\u2019s \u201cMusée Mécanique\u201d")
+        assert "\u201c" not in result
+        assert "\u201d" not in result
         assert '"' in result
 
     def test_sanitize_trademark_copyright(self, parser):
@@ -77,7 +77,7 @@ class TestSanitizeForCsv:
 
     def test_sanitize_multiple_unicode(self, parser):
         """Test sanitizing multiple unicode characters at once."""
-        result = parser.sanitize_for_csv('It\u2019s \u201cHello\u201d\u2013World\u2122')
+        result = parser.sanitize_for_csv("It\u2019s \u201cHello\u201d\u2013World\u2122")
         assert "'" in result
         assert '"' in result
         assert "-" in result
@@ -125,7 +125,6 @@ class TestNormalizeCellText:
     def test_normalize_cell_text_strips_whitespace(self, parser, temp_dir):
         """Test that cell text is stripped."""
         from docx import Document
-        from docx.shared import Pt
 
         # Create a temporary DOCX with a table cell
         doc = Document()

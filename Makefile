@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean build release test pytest
+.PHONY: help install install-dev clean build release test pytest format
 
 # Default target
 help:
@@ -12,6 +12,7 @@ help:
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make test         - Run a test conversion"
 	@echo "  make pytest       - Run pytest test suite"
+	@echo "  make format       - Format code with Black"
 
 # Install runtime dependencies only
 install:
@@ -54,3 +55,8 @@ test: build
 # Run pytest test suite
 pytest: build
 	python -m pytest tests/ -v
+
+# Format code with Black
+format:
+	black penny_parser.py penny_database.py tests/
+
