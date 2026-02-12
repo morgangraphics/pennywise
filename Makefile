@@ -49,7 +49,7 @@ test: build
 	@echo "Test complete! Check test_output.csv"
 
 # Run pytest test suite
-pytest:
+pytest: build
 	python -m pytest tests/ -v
 	./dist/pennywise -i ./pennies/labels/ca.docx -o test_output.csv
 	@echo "Test complete! Check test_output.csv"
