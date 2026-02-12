@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,7 +25,7 @@ jobs:
         run: make release
       
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pennywise-executable
           path: dist/pennywise
