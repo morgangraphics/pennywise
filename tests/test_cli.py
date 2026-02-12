@@ -2,6 +2,8 @@
 
 import pytest
 from penny_parser import PennyParser
+import sys
+from unittest.mock import patch, MagicMock
 
 
 @pytest.fixture
