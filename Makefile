@@ -51,5 +51,3 @@ test: build
 # Run pytest test suite
 pytest:
 	python -m pytest tests/ -v
-	./dist/pennywise -i ./pennies/labels/ca.docx -o test_output.csv
-	@echo "Test complete! Check test_output.csv"
