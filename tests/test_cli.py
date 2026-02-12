@@ -54,7 +54,7 @@ class TestArgumentParsing:
         # Test that -sl flag is recognized and sets short_loc to True
         args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-sl"])
         assert args.short_loc is True
-        
+
         # Test without the flag
         args_no_flag = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
         assert args_no_flag.short_loc is False
@@ -66,7 +66,7 @@ class TestArgumentParsing:
         # Test that -mld flag is recognized and sets multi_line_dash to True
         args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-mld"])
         assert args.multi_line_dash is True
-        
+
         # Test without the flag
         args_no_flag = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
         assert args_no_flag.multi_line_dash is False
@@ -78,7 +78,7 @@ class TestArgumentParsing:
         # Test that -n flag is recognized and sets new_only to True
         args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-n"])
         assert args.new_only is True
-        
+
         # Test without the flag
         args_no_flag = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
         assert args_no_flag.new_only is False
