@@ -1,6 +1,5 @@
 """Tests for PennyParser class - text parsing and sanitization."""
 
-import pytest
 from pathlib import Path
 
 
