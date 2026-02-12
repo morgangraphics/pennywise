@@ -1,4 +1,4 @@
-.PHONY: help install clean build release test
+.PHONY: help install clean build release test pytest
 
 # Default target
 help:
@@ -10,11 +10,13 @@ help:
 	@echo "  make release    - Create a clean release build"
 	@echo "  make clean      - Remove build artifacts"
 	@echo "  make test       - Run a test conversion"
+	@echo "  make pytest     - Run pytest test suite"
 
 # Install dependencies
 install:
 	pip install -r requirements.txt
 	pip install pyinstaller
+	pip install pytest python-docx
 
 # Clean build artifacts
 clean:
@@ -43,5 +45,11 @@ release: clean build
 
 # Test the built executable
 test: build
+	./dist/pennywise -i ./pennies/labels/ca.docx -o test_output.csv
+	@echo "Test complete! Check test_output.csv"
+
+# Run pytest test suite
+pytest:
+	python -m pytest tests/ -v
 	./dist/pennywise -i ./pennies/labels/ca.docx -o test_output.csv
 	@echo "Test complete! Check test_output.csv"
