@@ -30,117 +30,91 @@ class TestArgumentParsing:
 
     def test_input_short_form(self):
         """Test -i short form for input."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        # We can't fully test without a real file, but we can test parsing
-        with patch.object(
-            sys,
-            "argv",
-            ["penny_parser.py", "-i", "test.docx", "-o", "output.csv"],
-        ):
-            # Would fail at file check, so we mock the file existence
-            with patch("pathlib.Path.exists", return_value=False):
-                # Since file doesn't exist, parser will exit
-                # This is expected behavior
-                pass
+        # Test that -i short form is recognized and parsed correctly
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
+        assert args.input == "test.docx"
+        assert args.output == "output.csv"
 
     def test_output_short_form(self):
         """Test -o short form for output."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        with patch.object(
-            sys,
-            "argv",
-            ["penny_parser.py", "-i", "test.docx", "-o", "output.csv"],
-        ):
-            pass  # Argument parsing succeeded
+        # Test that -o short form is recognized and parsed correctly
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
+        assert args.input == "test.docx"
+        assert args.output == "output.csv"
 
     def test_short_location_flag(self):
         """Test -sl / --short-location flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        with patch.object(
-            sys,
-            "argv",
-            ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-sl"],
-        ):
-            pass  # Argument parsing succeeded
+        # Test that -sl flag is recognized and sets short_loc to True
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-sl"])
+        assert args.short_loc is True
+
+        # Test without the flag
+        args_no_flag = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
+        assert args_no_flag.short_loc is False
 
     def test_multi_line_dash_flag(self):
         """Test -mld / --multi-line-dash flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        with patch.object(
-            sys,
-            "argv",
-            ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-mld"],
-        ):
-            pass  # Argument parsing succeeded
+        # Test that -mld flag is recognized and sets multi_line_dash to True
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-mld"])
+        assert args.multi_line_dash is True
+
+        # Test without the flag
+        args_no_flag = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
+        assert args_no_flag.multi_line_dash is False
 
     def test_new_only_flag(self):
         """Test -n / --new-only flag."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        with patch.object(
-            sys,
-            "argv",
-            ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-n"],
-        ):
-            pass  # Argument parsing succeeded
+        # Test that -n flag is recognized and sets new_only to True
+        args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-n"])
+        assert args.new_only is True
+
+        # Test without the flag
+        args_no_flag = parse_arguments(["-i", "test.docx", "-o", "output.csv"])
+        assert args_no_flag.new_only is False
 
     def test_all_flags_together(self):
         """Test using all flags together."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        with patch.object(
-            sys,
-            "argv",
-            [
-                "penny_parser.py",
-                "-i",
-                "test.docx",
-                "-o",
-                "output.csv",
-                "-sl",
-                "-mld",
-                "-n",
-            ],
-        ):
-            pass  # Argument parsing succeeded
+        # Test that all flags work together
+        args = parse_arguments([
+            "-i", "test.docx",
+            "-o", "output.csv",
+            "-sl", "-mld", "-n"
+        ])
+        assert args.input == "test.docx"
+        assert args.output == "output.csv"
+        assert args.short_loc is True
+        assert args.multi_line_dash is True
+        assert args.new_only is True
 
     def test_long_form_arguments(self):
         """Test using long form of arguments."""
-        from penny_parser import main
-        import sys
-        from unittest.mock import patch
+        from penny_parser import parse_arguments
 
-        with patch.object(
-            sys,
-            "argv",
-            [
-                "penny_parser.py",
-                "--input",
-                "test.docx",
-                "--output",
-                "output.csv",
-                "--short-location",
-                "--multi-line-dash",
-                "--new-only",
-            ],
-        ):
-            pass  # Argument parsing succeeded
+        # Test that long form arguments work correctly
+        args = parse_arguments([
+            "--input", "test.docx",
+            "--output", "output.csv",
+            "--short-location",
+            "--multi-line-dash",
+            "--new-only"
+        ])
+        assert args.input == "test.docx"
+        assert args.output == "output.csv"
+        assert args.short_loc is True
+        assert args.multi_line_dash is True
+        assert args.new_only is True
 
     def test_help_flag(self):
         """Test -h / --help flag shows help."""
