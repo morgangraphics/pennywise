@@ -31,13 +31,11 @@ jobs:
           path: dist/pennywise
           retention-days: 30
       
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
+          name: Release ${{ github.run_number }}
           body: |
             Automated build from commit ${{ github.sha }}
             
@@ -47,13 +45,4 @@ jobs:
             ```
           draft: false
           prerelease: false
-      
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/pennywise
-          asset_name: pennywise
-          asset_content_type: application/octet-stream
+          files: dist/pennywise
