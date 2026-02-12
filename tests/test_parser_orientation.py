@@ -1,6 +1,5 @@
 """Tests for PennyParser class - orientation and type detection."""
 
-import pytest
 
 
 class TestDetectOrientationAndType:
