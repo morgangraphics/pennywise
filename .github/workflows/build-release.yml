@@ -1,0 +1,58 @@
+name: Build Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: make install
+      
+      - name: Build release
+        run: make release
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pennywise-executable
+          path: dist/pennywise
+          retention-days: 30
+      
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            Automated build from commit ${{ github.sha }}
+            
+            Download the executable and run:
+            ```bash
+            ./pennywise -i input.docx -o output.csv
+            ```
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/pennywise
+          asset_name: pennywise
+          asset_content_type: application/octet-stream
