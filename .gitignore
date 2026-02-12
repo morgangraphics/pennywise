@@ -1,0 +1,120 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# IDE and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.vim/
+
+# Testing
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+pennies.db
+
+# Logs
+*.log
+logs/
+
+# PyInstaller
+*.manifest
+*.spec
+dist/
+build/
+
+# Temporary files
+*.tmp
+.tmp/
+*.bak
+*.backup
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Project-specific
+penny_parser.log
+labels.log
+test_*.csv
+output.csv
+*.spec
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+*.code-workspace
+
+# macOS
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+$RECYCLE.BIN/
+ehthumbs.db
+
+# Node (if any frontend)
+node_modules/
+npm-debug.log
+
+# Miscellaneous
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/

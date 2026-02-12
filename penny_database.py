@@ -6,7 +6,6 @@ SQLite database handler for tracking pressed pennies and detecting new additions
 
 import sqlite3
 import hashlib
-from pathlib import Path
 from datetime import datetime
 
 
