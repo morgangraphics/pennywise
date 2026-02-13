@@ -10,11 +10,20 @@ Why Microsoft Word? I use [Avery 5167 Easy Peel Return Address Labels](https://w
 
 Pennywise is a standalone executable—no Python installation or virtual environment needed!
 
-1. Go to the [Releases](../../releases) page and download the latest `pennywise` executable
+1. Go to the [Releases](../../releases) page and download the latest executable for your platform:
+   - **Windows**: Download `pennywise.exe`
+   - **Linux**: Download `pennywise-linux`
 2. Place your Word document (.docx) in the same folder as the executable
 3. Run the command:
+
+   **Windows (PowerShell or Command Prompt):**
+   ```cmd
+   pennywise.exe --input your_file.docx --output output.csv
+   ```
+   
+   **Linux (Bash):**
    ```bash
-   ./pennywise --input your_file.docx --output output.csv
+   ./pennywise-linux --input your_file.docx --output output.csv
    ```
 
 That's it! Your labels will be extracted to a CSV file.
@@ -130,29 +139,54 @@ pennywise --input file.docx --output file.csv [options]
 
 ### Examples
 
-short form
-```shell
-./dist/pennywise -i input.docx -o output.csv
+**Short form (Windows):**
+```cmd
+pennywise.exe -i input.docx -o output.csv
 ```
 
-Long form
-```shell
-./dist/pennywise --input input.docx --output output.csv
+**Short form (Linux):**
+```bash
+./pennywise-linux -i input.docx -o output.csv
 ```
 
-List of new pennies since last time run
-```shell
-./dist/pennywise --input input.docx --output new.csv --new-only
+**Long form (Windows):**
+```cmd
+pennywise.exe --input input.docx --output output.csv
 ```
 
-Process all files in a directory:
-```shell
-./dist/pennywise --input ./pennies/labels/ --output all_new.csv --new-only
+**Long form (Linux):**
+```bash
+./pennywise-linux --input input.docx --output output.csv
 ```
 
-To get a list of all available flags:
-```shell
-./dist/pennywise --help
+**List of new pennies since last time run (Windows):**
+```cmd
+pennywise.exe --input input.docx --output new.csv --new-only
+```
+
+**List of new pennies since last time run (Linux):**
+```bash
+./pennywise-linux --input input.docx --output new.csv --new-only
+```
+
+**Process all files in a directory (Windows):**
+```cmd
+pennywise.exe --input .\pennies\labels\ --output all_new.csv --new-only
+```
+
+**Process all files in a directory (Linux):**
+```bash
+./pennywise-linux --input ./pennies/labels/ --output all_new.csv --new-only
+```
+
+**Get help (Windows):**
+```cmd
+pennywise.exe --help
+```
+
+**Get help (Linux):**
+```bash
+./pennywise-linux --help
 ```
 
 ## Features
