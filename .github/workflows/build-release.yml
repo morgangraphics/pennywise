@@ -11,7 +11,7 @@ permissions:
 
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     
     steps:
@@ -28,14 +28,66 @@ jobs:
       - name: Build release
         run: make release
       
-      - name: Upload artifact
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pennywise-executable
+          name: pennywise-linux
           path: dist/pennywise
           retention-days: 30
+
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v3
       
-      - name: Create Release and Upload Asset
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Build release
+        run: |
+          pyinstaller --onefile --name pennywise --add-data "penny_database.py:." penny_parser.py
+      
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pennywise-windows
+          path: dist/pennywise.exe
+          retention-days: 30
+
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pennywise-linux
+          path: ./linux-build
+      
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pennywise-windows
+          path: ./windows-build
+      
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          cp linux-build/pennywise release-assets/pennywise-linux
+          cp windows-build/pennywise.exe release-assets/pennywise.exe
+      
+      - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
@@ -43,10 +95,17 @@ jobs:
           body: |
             Automated build from commit ${{ github.sha }}
             
-            Download the executable and run:
+            **Linux:**
             ```bash
-            ./pennywise -i input.docx -o output.csv
+            ./pennywise-linux -i input.docx -o output.csv
+            ```
+            
+            **Windows:**
+            ```cmd
+            pennywise.exe -i input.docx -o output.csv
             ```
           draft: false
           prerelease: false
-          files: dist/pennywise
+          files: |
+            release-assets/pennywise-linux
+            release-assets/pennywise.exe
