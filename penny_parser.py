@@ -14,6 +14,8 @@ import argparse
 import mimetypes
 import re
 import logging
+import sys
+import io
 from pathlib import Path
 from docx import Document
 from docx.oxml.ns import qn
@@ -23,7 +25,8 @@ from penny_database import PennyDatabase
 class PennyParser:
     """Parser for pressed-penny DOCX documents."""
 
-    dash_regex = r"[-–]"  # Pattern to match both hyphen and en-dash
+    # Separator dash pattern (avoid splitting in-word like "two-way" or "Buc-ees")
+    dash_regex = r"(?<!\w)[-–—](?!\w)"
 
     def __init__(self, log_file: str = "penny_parser.log", db_file: str = "pennies.db"):
         """
@@ -119,19 +122,27 @@ class PennyParser:
         logger = logging.getLogger(logger_name or __name__)
         logger.setLevel(logging.DEBUG)
 
-        # Remove existing handlers
-        logger.handlers = []
+        # Close and remove existing handlers to prevent resource leaks
+        for handler in logger.handlers[:]:
+            handler.flush()
+            # Only close handlers that manage their own streams (e.g., FileHandler)
+            # FileHandler and its subclasses (RotatingFileHandler, etc.) are safely closed
+            # Don't close StreamHandlers that may wrap sys.stdout/stderr
+            if isinstance(handler, logging.FileHandler):
+                handler.close()
+            logger.removeHandler(handler)
 
         # Console handler - INFO and above (if enabled)
         if with_console:
-            console_handler = logging.StreamHandler()
+            # Use sys.stderr directly to avoid closing the underlying buffer
+            console_handler = logging.StreamHandler(sys.stderr)
             console_handler.setLevel(logging.INFO)
             console_formatter = logging.Formatter("%(levelname)s: %(message)s")
             console_handler.setFormatter(console_formatter)
             logger.addHandler(console_handler)
 
         # File handler - DEBUG and above (more verbose)
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
@@ -147,16 +158,56 @@ class PennyParser:
 
     def parse_state_from_filename(self, filename: str) -> str:
         """
-        Convert a two-letter filename prefix into a long-form U.S. state name.
+        Extract state name from filename using state_map as source of truth.
+        
+        Handles various filename formats:
+        - ca.docx, ca-new.docx, ca_backup.docx → California
+        - massachusetts.docx, massachusetts-old.docx → Massachusetts
+        - new.york.docx, new-york.docx → New York
 
         Args:
-            filename (str): The DOCX filename, e.g., 'co.docx'.
+            filename (str): The DOCX filename.
 
         Returns:
             str: Full state name, e.g., 'Colorado'.
         """
-        prefix = Path(filename).stem.lower()
-        return self.state_map.get(prefix, prefix.capitalize())
+        stem = Path(filename).stem.lower()
+        # Normalize: replace separators with spaces to get clean tokens
+        normalized_stem = stem.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+        tokens = normalized_stem.split()
+
+        # First, check if any state abbreviation (key) appears as a full token
+        # Sort by length descending to prioritize longer abbreviations
+        sorted_abbrevs = sorted(self.state_map.items(), key=lambda x: len(x[0]), reverse=True)
+        for abbrev, state_name in sorted_abbrevs:
+            abbrev_lower = abbrev.lower()
+            # Match abbreviation as a complete token (e.g., "dc" in "washington dc")
+            if any(token == abbrev_lower for token in tokens):
+                return state_name
+            # Also support filenames that start with the abbreviation followed by a separator
+            if stem == abbrev_lower or stem.startswith(abbrev_lower + '-') or stem.startswith(abbrev_lower + '_') or stem.startswith(abbrev_lower + '.'):
+                return state_name
+
+        # Second, check if any full state name (value) appears as token(s)
+        # Sort by length descending to match longer names first (e.g., "new york" before "ne")
+        sorted_states = sorted(self.state_map.items(), key=lambda x: len(x[1]), reverse=True)
+        for abbrev, state_name in sorted_states:
+            state_lower = state_name.lower()
+            state_tokens = state_lower.split()
+            # Try to match the state name as a contiguous sequence of tokens
+            if len(state_tokens) == 1:
+                if any(token == state_lower for token in tokens):
+                    return state_name
+            else:
+                n = len(state_tokens)
+                for i in range(len(tokens) - n + 1):
+                    if tokens[i:i + n] == state_tokens:
+                        return state_name
+            # Fallback: match "newyork" style filenames with no separators
+            if state_lower.replace(' ', '') in stem:
+                return state_name
+        # Fallback: capitalize the stem
+        return stem.capitalize()
 
     def split_and_strip(self, text: str, delimiter: str = None) -> list:
         """
@@ -485,8 +536,8 @@ class PennyParser:
         Each column in the table contains vertically paired entries:
         (row0,row1), (row2,row3), etc.
 
-        Skips even-numbered columns (2, 4, 6) which are spacer columns in the 7-column format.
-        Only processes odd-numbered columns (1, 3, 5, 7) which contain actual label data.
+        Skips odd-indexed columns (1, 3, 5) which are spacer columns in the 7-column format.
+        Only processes even-indexed columns (0, 2, 4, 6) which contain actual label data.
 
         Position index resets for each pair of rows:
         - Rows 0-1: positions 1-4
@@ -501,7 +552,7 @@ class PennyParser:
         """
         num_rows = len(table.rows)
         num_cols = len(table.columns)
-        # Count only non-spacer columns (even col_index values)
+        # Count only data columns at even indices (col_index 0, 2, 4, 6, etc.)
         num_data_cols = (num_cols + 1) // 2  # For 7 columns: 4 data columns
 
         def safe_cell(row_idx: int, col_idx: int):
@@ -512,8 +563,8 @@ class PennyParser:
 
         data_col_num = 0  # Track which data column we're on (0, 1, 2, 3...)
         for col_index in range(num_cols):
-            # Skip even-numbered columns (0-indexed, so even col_index = even column number)
-            if col_index % 2 == 0:  # Only process odd columns (1, 3, 5, 7...)
+            # Process only even-indexed columns (0, 2, 4, 6, etc.) which contain data
+            if col_index % 2 == 0:  # Skip odd indices (1, 3, 5, etc.) which are spacers
                 for r in range(0, num_rows, 2):
                     cell1 = safe_cell(r, col_index)
                     cell2 = safe_cell(r + 1, col_index) if r + 1 < num_rows else None
@@ -624,17 +675,19 @@ class PennyParser:
                             # H2 is just the neighborhood, H3s will be the locations
                             row_data.update(
                                 {
-                                    "Neighborhood": self.sanitize_for_csv(text),
+                                    #"Neighborhood": self.sanitize_for_csv(text),
+                                     "Neighborhood": "",
                                     "Location": "",
                                 }
                             )
                         else:
-                            # H2 is both neighborhood AND location (no H3s below it)
+                            # H2 is the location (Neighborhood intentionally empty)
                             if self.short_location:
                                 # short_location: Location is empty, only Neighborhood is set
                                 row_data.update(
                                     {
-                                        "Neighborhood": self.sanitize_for_csv(text),
+                                        #"Neighborhood": self.sanitize_for_csv(text),
+                                        "Neighborhood": "",
                                         "Location": "",
                                     }
                                 )
@@ -642,7 +695,8 @@ class PennyParser:
                                 # full format: Location matches Neighborhood
                                 row_data.update(
                                     {
-                                        "Neighborhood": self.sanitize_for_csv(text),
+                                        #"Neighborhood": self.sanitize_for_csv(text),
+                                        "Neighborhood": "",
                                         "Location": self.sanitize_for_csv(text),
                                     }
                                 )
@@ -670,7 +724,8 @@ class PennyParser:
                             location = " ".join(parts[1:])
                         else:
                             # H3 is just the location, use current neighborhood from H2
-                            neighborhood = current_neighborhood
+                            #neighborhood = current_neighborhood
+                            neighborhood = ""
                             location = text
 
                         # Update row_data with parsed neighborhood and location
@@ -679,7 +734,8 @@ class PennyParser:
                             # short_location: Only use the location part after the dash
                             row_data.update(
                                 {
-                                    "Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    #"Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    "Neighborhood": "",
                                     "Location": self.sanitize_for_csv(location),
                                 }
                             )
@@ -692,7 +748,8 @@ class PennyParser:
                             )
                             row_data.update(
                                 {
-                                    "Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    #"Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    "Neighborhood": "",
                                     "Location": self.sanitize_for_csv(full_location),
                                 }
                             )
@@ -823,18 +880,29 @@ class PennyParser:
                             }
                         )
 
-                        # Check if new_only flag is set and if penny is new
-                        if self.new_only:
-                            if self.db.penny_exists(row_to_append):
-                                self.logger.debug(
-                                    f"Skipping duplicate penny: {row_to_append['Name']} at {row_to_append['Location']}"
-                                )
-                                position_stor.update({stor_hash: position})
-                                continue  # Skip this penny
-                            else:
-                                self.db.add_penny(row_to_append)
+                        # Check if penny exists in database
+                        is_new = not self.db.penny_exists(row_to_append)
 
-                        csv_rows.append(row_to_append)
+                        # If penny is new, add it to database
+                        if is_new:
+                            self.db.add_penny(row_to_append)
+                            self.logger.debug(
+                                f"New penny found: {row_to_append['Name']} at {row_to_append['Location']}"
+                            )
+                        else:
+                            self.logger.debug(
+                                f"Existing penny: {row_to_append['Name']} at {row_to_append['Location']}"
+                            )
+
+                        # Add to output based on --new-only flag
+                        if self.new_only:
+                            # Only output new pennies
+                            if is_new:
+                                csv_rows.append(row_to_append)
+                        else:
+                            # Output all pennies
+                            csv_rows.append(row_to_append)
+
                         position_stor.update({stor_hash: position})
 
         return csv_rows
