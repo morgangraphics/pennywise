@@ -72,6 +72,104 @@ class TestParseStateFromFilename:
             result = parser.parse_state_from_filename(f"{abbrev}.docx")
             assert result == full_name, f"Failed for {abbrev}"
 
+    def test_parse_abbreviation_with_dash_suffix(self, parser):
+        """Test parsing state abbreviation with dash suffix."""
+        result = parser.parse_state_from_filename("ca-new.docx")
+        assert result == "California"
+
+    def test_parse_abbreviation_with_underscore_suffix(self, parser):
+        """Test parsing state abbreviation with underscore suffix."""
+        result = parser.parse_state_from_filename("ca_backup.docx")
+        assert result == "California"
+
+    def test_parse_abbreviation_with_dot_suffix(self, parser):
+        """Test parsing state abbreviation with dot suffix."""
+        result = parser.parse_state_from_filename("co.old.docx")
+        assert result == "Colorado"
+
+    def test_parse_abbreviation_with_multiple_suffixes(self, parser):
+        """Test parsing state abbreviation with multiple suffix words."""
+        result = parser.parse_state_from_filename("ny-backup-2024.docx")
+        assert result == "New York"
+
+    def test_parse_full_state_name_single_word(self, parser):
+        """Test parsing full state name for single-word states."""
+        result = parser.parse_state_from_filename("massachusetts.docx")
+        assert result == "Massachusetts"
+
+    def test_parse_full_state_name_with_suffix(self, parser):
+        """Test parsing full state name with suffix."""
+        result = parser.parse_state_from_filename("massachusetts-old.docx")
+        assert result == "Massachusetts"
+
+    def test_parse_full_state_california(self, parser):
+        """Test parsing full California state name."""
+        result = parser.parse_state_from_filename("california.docx")
+        assert result == "California"
+
+    def test_parse_full_state_california_with_suffix(self, parser):
+        """Test parsing full California state name with suffix."""
+        result = parser.parse_state_from_filename("california-new.docx")
+        assert result == "California"
+
+    def test_parse_multiword_state_with_dots(self, parser):
+        """Test parsing multi-word state name with dots."""
+        result = parser.parse_state_from_filename("new.york.docx")
+        assert result == "New York"
+
+    def test_parse_multiword_state_with_dashes(self, parser):
+        """Test parsing multi-word state name with dashes."""
+        result = parser.parse_state_from_filename("new-york.docx")
+        assert result == "New York"
+
+    def test_parse_multiword_state_new_mexico_dots(self, parser):
+        """Test parsing New Mexico with dots."""
+        result = parser.parse_state_from_filename("new.mexico.docx")
+        assert result == "New Mexico"
+
+    def test_parse_multiword_state_new_mexico_dashes(self, parser):
+        """Test parsing New Mexico with dashes."""
+        result = parser.parse_state_from_filename("new-mexico.docx")
+        assert result == "New Mexico"
+
+    def test_parse_multiword_state_north_carolina_dots(self, parser):
+        """Test parsing North Carolina with dots."""
+        result = parser.parse_state_from_filename("north.carolina.docx")
+        assert result == "North Carolina"
+
+    def test_parse_multiword_state_north_carolina_dashes(self, parser):
+        """Test parsing North Carolina with dashes."""
+        result = parser.parse_state_from_filename("north-carolina.docx")
+        assert result == "North Carolina"
+
+    def test_parse_multiword_state_with_suffix(self, parser):
+        """Test parsing multi-word state name with suffix."""
+        result = parser.parse_state_from_filename("new-york-backup.docx")
+        assert result == "New York"
+
+    def test_collision_in_not_abbreviation(self, parser):
+        """Test that 'in' in 'indiana' doesn't match Indiana abbreviation."""
+        result = parser.parse_state_from_filename("indiana.docx")
+        assert result == "Indiana"
+
+    def test_collision_or_word_vs_oregon(self, parser):
+        """Test that standalone 'or' word doesn't incorrectly match when not state."""
+        # 'or' is Oregon abbreviation, but 'oregon' should match as full state name
+        result = parser.parse_state_from_filename("oregon.docx")
+        assert result == "Oregon"
+
+    def test_false_positive_common_word_in_filename(self, parser):
+        """Test that common words that might be state abbreviations don't match."""
+        # 'me' is Maine abbreviation, but 'readme' should not match
+        result = parser.parse_state_from_filename("readme.docx")
+        assert result == "Readme"  # Fallback capitalization
+
+    def test_false_positive_partial_state_name(self, parser):
+        """Test that partial state names don't incorrectly match."""
+        # 'wash' should not match Washington
+        result = parser.parse_state_from_filename("wash.docx")
+        assert result == "Wash"  # Fallback capitalization
+
 
 class TestCellIsRetired:
     """Test the cell_is_retired method."""
