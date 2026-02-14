@@ -514,8 +514,8 @@ class PennyParser:
         Each column in the table contains vertically paired entries:
         (row0,row1), (row2,row3), etc.
 
-        Skips even-numbered columns (2, 4, 6) which are spacer columns in the 7-column format.
-        Only processes odd-numbered columns (1, 3, 5, 7) which contain actual label data.
+        Skips odd-indexed columns (1, 3, 5) which are spacer columns in the 7-column format.
+        Only processes even-indexed columns (0, 2, 4, 6) which contain actual label data.
 
         Position index resets for each pair of rows:
         - Rows 0-1: positions 1-4
@@ -530,7 +530,7 @@ class PennyParser:
         """
         num_rows = len(table.rows)
         num_cols = len(table.columns)
-        # Count only non-spacer columns (even col_index values)
+        # Count only data columns at even indices (col_index 0, 2, 4, 6, etc.)
         num_data_cols = (num_cols + 1) // 2  # For 7 columns: 4 data columns
 
         def safe_cell(row_idx: int, col_idx: int):
@@ -541,8 +541,8 @@ class PennyParser:
 
         data_col_num = 0  # Track which data column we're on (0, 1, 2, 3...)
         for col_index in range(num_cols):
-            # Skip even-numbered columns (0-indexed, so even col_index = even column number)
-            if col_index % 2 == 0:  # Only process odd columns (1, 3, 5, 7...)
+            # Process only even-indexed columns (0, 2, 4, 6, etc.) which contain data
+            if col_index % 2 == 0:  # Skip odd indices (1, 3, 5, etc.) which are spacers
                 for r in range(0, num_rows, 2):
                     cell1 = safe_cell(r, col_index)
                     cell2 = safe_cell(r + 1, col_index) if r + 1 < num_rows else None
