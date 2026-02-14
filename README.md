@@ -202,20 +202,17 @@ The script will compare the Document Map and the Labels against one another to e
 
 ```shell
 ============================================================
-Mismatch for Anaheim Downtown Disney World Of Disney
+Mismatch for Washington, D.C Smithsonian National Museum  of American History
+  City Mismatch:
+    Document Map City: 'Washington, D.C.'
+    Parsed Label City: 'Washington, D.C'
   Location Mismatch:
-    Document Map Location: 'Downtown Disney - World of Disney'
-    Parsed Label Location: 'Downtown Disney - World Of Disney'
-2026-02-05 19:47:16,684 - WARNING - parse_docx_to_rows:712 - 
-============================================================
-```
-```shell
-============================================================
-Mismatch for Half Moon Bay Half Moon Bay Sports Fishing And Tackle Shop
+    Document Map Location: 'Smithsonian National Museum Of American History #1'
+    Parsed Label Location: 'Smithsonian National Museum of American History'
   Neighborhood Mismatch:
-    Document Map Neighborhood: ''
-    Parsed Label Neighborhood: 'Half Moon Bay Sports Fishing'
-2026-02-05 19:47:17,347 - WARNING - parse_docx_to_rows:712 - 
+    Document Map Neighborhood: 'Smithsonian National Museum Of American History #1'
+    Parsed Label Neighborhood: 'Smithsonian National Museum'
+2026-02-13 20:04:44,172 - WARNING - parse_docx_to_rows:790 - 
 ============================================================
 ```
 

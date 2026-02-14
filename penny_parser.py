@@ -14,6 +14,8 @@ import argparse
 import mimetypes
 import re
 import logging
+import sys
+import io
 from pathlib import Path
 from docx import Document
 from docx.oxml.ns import qn
@@ -23,7 +25,8 @@ from penny_database import PennyDatabase
 class PennyParser:
     """Parser for pressed-penny DOCX documents."""
 
-    dash_regex = r"[-–]"  # Pattern to match both hyphen and en-dash
+    # Separator dash pattern (avoid splitting in-word like "two-way" or "Buc-ees")
+    dash_regex = r"(?<!\w)[-–—](?!\w)"
 
     def __init__(self, log_file: str = "penny_parser.log", db_file: str = "pennies.db"):
         """
@@ -124,14 +127,21 @@ class PennyParser:
 
         # Console handler - INFO and above (if enabled)
         if with_console:
-            console_handler = logging.StreamHandler()
+            console_stream = sys.stderr
+            try:
+                console_stream = io.TextIOWrapper(
+                    sys.stderr.buffer, encoding="utf-8", errors="replace"
+                )
+            except Exception:
+                console_stream = sys.stderr
+            console_handler = logging.StreamHandler(console_stream)
             console_handler.setLevel(logging.INFO)
             console_formatter = logging.Formatter("%(levelname)s: %(message)s")
             console_handler.setFormatter(console_formatter)
             logger.addHandler(console_handler)
 
         # File handler - DEBUG and above (more verbose)
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
@@ -147,16 +157,41 @@ class PennyParser:
 
     def parse_state_from_filename(self, filename: str) -> str:
         """
-        Convert a two-letter filename prefix into a long-form U.S. state name.
+        Extract state name from filename using state_map as source of truth.
+        
+        Handles various filename formats:
+        - ca.docx, ca-new.docx, ca_backup.docx → California
+        - massachusetts.docx, massachusetts-old.docx → Massachusetts
+        - new.york.docx, new-york.docx → New York
 
         Args:
-            filename (str): The DOCX filename, e.g., 'co.docx'.
+            filename (str): The DOCX filename.
 
         Returns:
             str: Full state name, e.g., 'Colorado'.
         """
-        prefix = Path(filename).stem.lower()
-        return self.state_map.get(prefix, prefix.capitalize())
+        stem = Path(filename).stem.lower()
+        # Normalize: replace separators with spaces and also keep original
+        normalized_stem = stem.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+        
+        # First, check if any full state name (value) appears in normalized stem
+        # Sort by length descending to match longer names first (e.g., "new york" before "ne")
+        sorted_states = sorted(self.state_map.items(), key=lambda x: len(x[1]), reverse=True)
+        for abbrev, state_name in sorted_states:
+            state_lower = state_name.lower()
+            if state_lower in normalized_stem or state_lower.replace(' ', '') in stem:
+                return state_name
+        
+        # Second, check if any state abbreviation (key) appears in the stem
+        # Sort by length descending to prioritize longer abbreviations
+        sorted_abbrevs = sorted(self.state_map.items(), key=lambda x: len(x[0]), reverse=True)
+        for abbrev, state_name in sorted_abbrevs:
+            # Match abbreviation as a complete token (word boundary)
+            if stem == abbrev or stem.startswith(abbrev + '-') or stem.startswith(abbrev + '_') or stem.startswith(abbrev + '.'):
+                return state_name
+        
+        # Fallback: capitalize the stem
+        return stem.capitalize()
 
     def split_and_strip(self, text: str, delimiter: str = None) -> list:
         """
@@ -624,17 +659,19 @@ class PennyParser:
                             # H2 is just the neighborhood, H3s will be the locations
                             row_data.update(
                                 {
-                                    "Neighborhood": self.sanitize_for_csv(text),
+                                    #"Neighborhood": self.sanitize_for_csv(text),
+                                     "Neighborhood": "",
                                     "Location": "",
                                 }
                             )
                         else:
-                            # H2 is both neighborhood AND location (no H3s below it)
+                            # H2 is the location (Neighborhood intentionally empty)
                             if self.short_location:
                                 # short_location: Location is empty, only Neighborhood is set
                                 row_data.update(
                                     {
-                                        "Neighborhood": self.sanitize_for_csv(text),
+                                        #"Neighborhood": self.sanitize_for_csv(text),
+                                        "Neighborhood": "",
                                         "Location": "",
                                     }
                                 )
@@ -642,7 +679,8 @@ class PennyParser:
                                 # full format: Location matches Neighborhood
                                 row_data.update(
                                     {
-                                        "Neighborhood": self.sanitize_for_csv(text),
+                                        #"Neighborhood": self.sanitize_for_csv(text),
+                                        "Neighborhood": "",
                                         "Location": self.sanitize_for_csv(text),
                                     }
                                 )
@@ -670,7 +708,8 @@ class PennyParser:
                             location = " ".join(parts[1:])
                         else:
                             # H3 is just the location, use current neighborhood from H2
-                            neighborhood = current_neighborhood
+                            #neighborhood = current_neighborhood
+                            neighborhood = ""
                             location = text
 
                         # Update row_data with parsed neighborhood and location
@@ -679,7 +718,8 @@ class PennyParser:
                             # short_location: Only use the location part after the dash
                             row_data.update(
                                 {
-                                    "Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    #"Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    "Neighborhood": "",
                                     "Location": self.sanitize_for_csv(location),
                                 }
                             )
@@ -692,7 +732,8 @@ class PennyParser:
                             )
                             row_data.update(
                                 {
-                                    "Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    #"Neighborhood": self.sanitize_for_csv(neighborhood),
+                                    "Neighborhood": "",
                                     "Location": self.sanitize_for_csv(full_location),
                                 }
                             )
@@ -823,18 +864,29 @@ class PennyParser:
                             }
                         )
 
-                        # Check if new_only flag is set and if penny is new
-                        if self.new_only:
-                            if self.db.penny_exists(row_to_append):
-                                self.logger.debug(
-                                    f"Skipping duplicate penny: {row_to_append['Name']} at {row_to_append['Location']}"
-                                )
-                                position_stor.update({stor_hash: position})
-                                continue  # Skip this penny
-                            else:
-                                self.db.add_penny(row_to_append)
+                        # Check if penny exists in database
+                        is_new = not self.db.penny_exists(row_to_append)
 
-                        csv_rows.append(row_to_append)
+                        # If penny is new, add it to database
+                        if is_new:
+                            self.db.add_penny(row_to_append)
+                            self.logger.debug(
+                                f"New penny found: {row_to_append['Name']} at {row_to_append['Location']}"
+                            )
+                        else:
+                            self.logger.debug(
+                                f"Existing penny: {row_to_append['Name']} at {row_to_append['Location']}"
+                            )
+
+                        # Add to output based on --new-only flag
+                        if self.new_only:
+                            # Only output new pennies
+                            if is_new:
+                                csv_rows.append(row_to_append)
+                        else:
+                            # Output all pennies
+                            csv_rows.append(row_to_append)
+
                         position_stor.update({stor_hash: position})
 
         return csv_rows

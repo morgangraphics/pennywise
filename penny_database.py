@@ -45,6 +45,18 @@ class PennyDatabase:
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_hash ON pennies(hash)")
         self.conn.commit()
 
+    def _normalize_keys(self, penny_dict: dict) -> dict:
+        """
+        Normalize penny dict keys to lowercase for consistent access.
+
+        Args:
+            penny_dict (dict): Dictionary containing penny data.
+
+        Returns:
+            dict: Lowercased-key dictionary.
+        """
+        return {str(k).lower(): v for k, v in penny_dict.items()}
+
     def _hash_penny(self, penny_dict: dict) -> str:
         """
         Create a unique hash for a penny based on identifying fields.
@@ -55,7 +67,8 @@ class PennyDatabase:
         Returns:
             str: SHA-256 hash of the penny's identifying characteristics.
         """
-        key = f"{penny_dict.get('state', '')}|{penny_dict.get('city', '')}|{penny_dict.get('location', '')}|{penny_dict.get('name', '')}|{penny_dict.get('orientation', '')}"
+        normalized = self._normalize_keys(penny_dict)
+        key = f"{normalized.get('state', '')}|{normalized.get('city', '')}|{normalized.get('location', '')}|{normalized.get('name', '')}|{normalized.get('orientation', '')}"
         return hashlib.sha256(key.encode()).hexdigest()
 
     def penny_exists(self, penny_dict: dict) -> bool:
@@ -83,7 +96,8 @@ class PennyDatabase:
         Returns:
             bool: True if penny was added, False if it already existed.
         """
-        hash_val = self._hash_penny(penny_dict)
+        normalized = self._normalize_keys(penny_dict)
+        hash_val = self._hash_penny(normalized)
         try:
             self.conn.execute(
                 """
@@ -92,15 +106,15 @@ class PennyDatabase:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
-                    penny_dict.get("state", ""),
-                    penny_dict.get("city", ""),
-                    penny_dict.get("neighborhood", ""),
-                    penny_dict.get("location", ""),
-                    penny_dict.get("name", ""),
-                    penny_dict.get("orientation", ""),
-                    penny_dict.get("type", ""),
-                    penny_dict.get("year", ""),
-                    penny_dict.get("position", ""),
+                    normalized.get("state", ""),
+                    normalized.get("city", ""),
+                    normalized.get("neighborhood", ""),
+                    normalized.get("location", ""),
+                    normalized.get("name", ""),
+                    normalized.get("orientation", ""),
+                    normalized.get("type", ""),
+                    normalized.get("year", ""),
+                    normalized.get("position", ""),
                     hash_val,
                 ),
             )
