@@ -128,12 +128,6 @@ class PennyParser:
         # Console handler - INFO and above (if enabled)
         if with_console:
             console_stream = sys.stderr
-            try:
-                console_stream = io.TextIOWrapper(
-                    sys.stderr.buffer, encoding="utf-8", errors="replace"
-                )
-            except Exception:
-                console_stream = sys.stderr
             console_handler = logging.StreamHandler(console_stream)
             console_handler.setLevel(logging.INFO)
             console_formatter = logging.Formatter("%(levelname)s: %(message)s")
