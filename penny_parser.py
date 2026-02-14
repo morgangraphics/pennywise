@@ -122,19 +122,19 @@ class PennyParser:
         logger = logging.getLogger(logger_name or __name__)
         logger.setLevel(logging.DEBUG)
 
-        # Remove existing handlers
-        logger.handlers = []
+        # Close and remove existing handlers to prevent resource leaks
+        for handler in logger.handlers[:]:
+            handler.flush()
+            # Only close handlers that manage their own streams (e.g., FileHandler)
+            # Don't close StreamHandlers that may wrap sys.stdout/stderr
+            if isinstance(handler, logging.FileHandler):
+                handler.close()
+            logger.removeHandler(handler)
 
         # Console handler - INFO and above (if enabled)
         if with_console:
-            console_stream = sys.stderr
-            try:
-                console_stream = io.TextIOWrapper(
-                    sys.stderr.buffer, encoding="utf-8", errors="replace"
-                )
-            except Exception:
-                console_stream = sys.stderr
-            console_handler = logging.StreamHandler(console_stream)
+            # Use sys.stderr directly to avoid closing the underlying buffer
+            console_handler = logging.StreamHandler(sys.stderr)
             console_handler.setLevel(logging.INFO)
             console_formatter = logging.Formatter("%(levelname)s: %(message)s")
             console_handler.setFormatter(console_formatter)
