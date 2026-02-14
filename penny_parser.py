@@ -504,13 +504,21 @@ class PennyParser:
         # Count only non-spacer columns (even col_index values)
         num_data_cols = (num_cols + 1) // 2  # For 7 columns: 4 data columns
 
+        def safe_cell(row_idx: int, col_idx: int):
+            try:
+                return table.cell(row_idx, col_idx)
+            except IndexError:
+                return None
+
         data_col_num = 0  # Track which data column we're on (0, 1, 2, 3...)
         for col_index in range(num_cols):
             # Skip even-numbered columns (0-indexed, so even col_index = even column number)
             if col_index % 2 == 0:  # Only process odd columns (1, 3, 5, 7...)
                 for r in range(0, num_rows, 2):
-                    cell1 = table.cell(r, col_index)
-                    cell2 = table.cell(r + 1, col_index) if r + 1 < num_rows else None
+                    cell1 = safe_cell(r, col_index)
+                    cell2 = safe_cell(r + 1, col_index) if r + 1 < num_rows else None
+                    if cell1 is None:
+                        continue
                     # Position calculation: data_col_num + 1 + (row_pair_index * num_data_cols)
                     row_pair_index = r // 2
                     position = data_col_num + 1 + (row_pair_index * num_data_cols)
@@ -562,6 +570,9 @@ class PennyParser:
 
         current_set = 0  # Counter for sets within a year
         last_year = None  # Track the last year to detect when it changes
+
+        # Initialize row_data so tables before any Heading 1 don't crash
+        row_data = row_dict.copy()
 
         # Iterate through document body elements in order (maintains document flow)
         for element in document.element.body:
@@ -895,6 +906,13 @@ class PennyParser:
                 f"ERROR: Input file is not a valid Microsoft Word (.docx) file. Got MIME type: {mime_type}"
             )
             return
+
+        # Configure labels logger per input state/file (e.g., labels_dc.log)
+        input_stem = Path(input_file).stem.lower()
+        labels_log_file = f"labels_{input_stem}.log"
+        self.labels_logger = self.setup_logging(
+            labels_log_file, logger_name=f"{__name__}.labels", with_console=False
+        )
 
         # Check if output file exists and get user preference before processing
         output_path = Path(output_file)
