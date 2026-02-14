@@ -126,6 +126,7 @@ class PennyParser:
         for handler in logger.handlers[:]:
             handler.flush()
             # Only close handlers that manage their own streams (e.g., FileHandler)
+            # FileHandler and its subclasses (RotatingFileHandler, etc.) are safely closed
             # Don't close StreamHandlers that may wrap sys.stdout/stderr
             if isinstance(handler, logging.FileHandler):
                 handler.close()
