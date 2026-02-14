@@ -172,25 +172,40 @@ class PennyParser:
             str: Full state name, e.g., 'Colorado'.
         """
         stem = Path(filename).stem.lower()
-        # Normalize: replace separators with spaces and also keep original
+        # Normalize: replace separators with spaces to get clean tokens
         normalized_stem = stem.replace('-', ' ').replace('_', ' ').replace('.', ' ')
-        
-        # First, check if any full state name (value) appears in normalized stem
+        tokens = normalized_stem.split()
+
+        # First, check if any state abbreviation (key) appears as a full token
+        # Sort by length descending to prioritize longer abbreviations
+        sorted_abbrevs = sorted(self.state_map.items(), key=lambda x: len(x[0]), reverse=True)
+        for abbrev, state_name in sorted_abbrevs:
+            abbrev_lower = abbrev.lower()
+            # Match abbreviation as a complete token (e.g., "dc" in "washington dc")
+            if any(token == abbrev_lower for token in tokens):
+                return state_name
+            # Also support filenames that start with the abbreviation followed by a separator
+            if stem == abbrev_lower or stem.startswith(abbrev_lower + '-') or stem.startswith(abbrev_lower + '_') or stem.startswith(abbrev_lower + '.'):
+                return state_name
+
+        # Second, check if any full state name (value) appears as token(s)
         # Sort by length descending to match longer names first (e.g., "new york" before "ne")
         sorted_states = sorted(self.state_map.items(), key=lambda x: len(x[1]), reverse=True)
         for abbrev, state_name in sorted_states:
             state_lower = state_name.lower()
-            if state_lower in normalized_stem or state_lower.replace(' ', '') in stem:
+            state_tokens = state_lower.split()
+            # Try to match the state name as a contiguous sequence of tokens
+            if len(state_tokens) == 1:
+                if any(token == state_lower for token in tokens):
+                    return state_name
+            else:
+                n = len(state_tokens)
+                for i in range(len(tokens) - n + 1):
+                    if tokens[i:i + n] == state_tokens:
+                        return state_name
+            # Fallback: match "newyork" style filenames with no separators
+            if state_lower.replace(' ', '') in stem:
                 return state_name
-        
-        # Second, check if any state abbreviation (key) appears in the stem
-        # Sort by length descending to prioritize longer abbreviations
-        sorted_abbrevs = sorted(self.state_map.items(), key=lambda x: len(x[0]), reverse=True)
-        for abbrev, state_name in sorted_abbrevs:
-            # Match abbreviation as a complete token (word boundary)
-            if stem == abbrev or stem.startswith(abbrev + '-') or stem.startswith(abbrev + '_') or stem.startswith(abbrev + '.'):
-                return state_name
-        
         # Fallback: capitalize the stem
         return stem.capitalize()
 
