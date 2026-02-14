@@ -11,10 +11,10 @@ Why Microsoft Word? I use [Avery 5167 Easy Peel Return Address Labels](https://w
 Pennywise is a standalone executable—no Python installation or virtual environment needed!
 
 1. Go to the [Releases](../../releases) page and download the latest executable for your platform:
-   - **Windows**: Download `pennywise.exe`
-   - **Linux**: Download `pennywise-linux`
-2. Place your Word document (.docx) in the same folder as the executable
-3. Run the command:
+   - **Windows**: Download `pennywise.exe` (includes .exe extension)
+   - **Linux**: Download `pennywise` (no file extension)
+1. Place your Word document (.docx) in the same folder as the executable
+1. Run the command:
 
    **Windows (PowerShell or Command Prompt):**
    ```cmd
@@ -23,7 +23,8 @@ Pennywise is a standalone executable—no Python installation or virtual environ
    
    **Linux (Bash):**
    ```bash
-   ./pennywise-linux --input your_file.docx --output output.csv
+   # Make the file executable: `chmod +x pennywise`
+   ./pennywise --input your_file.docx --output output.csv
    ```
 
 That's it! Your labels will be extracted to a CSV file.
@@ -69,7 +70,7 @@ This is pretty self-explanatory. I like to organize my collection by State and t
 > A drawback to using Microsoft Word is that sorting doesn't happen automatically. However, Microsoft Word is pretty forgiving with copying and pasting. 
 
 #### Heading 2 = Neighborhood or Location
-The Neighborhood/Location breakdown makes a lot of sense until it doesn't, so there is some flexibility here depending on the situation. In the [ca.docx file](./pennies/labels/ca.docx) example, Disneyland isn't a neighborhood, it's an amusement park in Anaheim. In Long Beach, Shoreline Village is a location, that has other locations within it, so Shoreline Village becomes the neighborhood. In San Francisco Chinatown is an actual neighborhood. So, you can see the issue here. The neighborhood scenario shows up more often in the documents than the amusement park, so this script leans towards neighborhood/location scenario even if everything doesn't fit nicely into that categorization
+The Neighborhood/Location breakdown makes a lot of sense until it doesn't, so there is some flexibility here depending on the situation. In the [ca.docx file](./pennies/labels/ca.docx) example, Disneyland isn't a neighborhood, it's an amusement park in Anaheim. In Long Beach. In San Francisco Chinatown is an actual neighborhood. So, you can see the issue here. The neighborhood scenario shows up more often in the documents than the amusement park, so this script leans towards neighborhood/location scenario even if everything doesn't fit nicely into that categorization
 
 **Rule of thumb**
 
@@ -123,6 +124,12 @@ It allows for me to easily see what is retired while looking at the document.
 Once you have the pennywise executable, navigate to the directory you extracted it, you can use it like:
 
 ```bash
+# Windows
+pennywise.exe --input file.docx --output file.csv [options]
+```
+OR 
+```bash
+# Linux
 pennywise --input file.docx --output file.csv [options]
 ```
 
@@ -139,54 +146,58 @@ pennywise --input file.docx --output file.csv [options]
 
 ### Examples
 
-**Short form (Windows):**
+#### Windows
+
+**Short form:**
 ```cmd
 pennywise.exe -i input.docx -o output.csv
 ```
 
-**Short form (Linux):**
-```bash
-./pennywise-linux -i input.docx -o output.csv
-```
-
-**Long form (Windows):**
+**Long form:**
 ```cmd
 pennywise.exe --input input.docx --output output.csv
 ```
 
-**Long form (Linux):**
-```bash
-./pennywise-linux --input input.docx --output output.csv
-```
-
-**List of new pennies since last time run (Windows):**
+**List of new pennies since last time run:**
 ```cmd
 pennywise.exe --input input.docx --output new.csv --new-only
 ```
 
-**List of new pennies since last time run (Linux):**
-```bash
-./pennywise-linux --input input.docx --output new.csv --new-only
-```
-
-**Process all files in a directory (Windows):**
+**Process all files in a directory:**
 ```cmd
 pennywise.exe --input .\pennies\labels\ --output all_new.csv --new-only
 ```
 
-**Process all files in a directory (Linux):**
-```bash
-./pennywise-linux --input ./pennies/labels/ --output all_new.csv --new-only
-```
-
-**Get help (Windows):**
+**Get help:**
 ```cmd
 pennywise.exe --help
 ```
 
-**Get help (Linux):**
+#### Linux
+
+**Short form:**
 ```bash
-./pennywise-linux --help
+./pennywise -i input.docx -o output.csv
+```
+
+**Long form:**
+```bash
+./pennywise --input input.docx --output output.csv
+```
+
+**List of new pennies since last time run:**
+```bash
+./pennywise --input input.docx --output new.csv --new-only
+```
+
+**Process all files in a directory:**
+```bash
+./pennywise --input ./pennies/labels/ --output all_new.csv --new-only
+```
+
+**Get help:**
+```bash
+./pennywise --help
 ```
 
 ## Features
@@ -195,10 +206,10 @@ pennywise.exe --help
 Word does some things well, however, those things don't always translate well outside of Word. The script will attempt to normalize Word specific Unicode characters (e.g. Quotes, ", '), to their ASCII equivalent so they are universal. 
 
 ### Process All Documents In A Directory
-The script has the ability to process all documents in a folder. This should make things easier when looking for all the new entries when adding to the collection
+The script has the ability to process all documents in a folder. This should make things easier when looking for all the new entries `--new-only` when adding to the collection
 
 ### Label Logging
-The script will compare the Document Map and the Labels against one another to ensure consistency. When doing things at scale, mistakes happen. The `labels.log` file will log any of 3 types of inconsistencies with the Document Map and the Labels: City, Neighborhood, and Location. Log entries look like:
+The script will compare the Document Map and the Labels against one another to ensure consistency. When doing things at scale, mistakes happen. The `labels_<STATE>.log` file will log any of 3 types of inconsistencies with the Document Map and the Labels: City, Neighborhood, and Location. Log entries look like:
 
 ```shell
 ============================================================
@@ -226,6 +237,6 @@ There is a SQLite 3 database to keep track of previously extracted pennies. The 
 ./dist/pennywise --input input.docx --output new.csv --new-only
 ```
 
-There is a caveat with this approach,  a cryptographic hash is different when you hash words like `Foo` vs `foo`, even though the words are semantically the same. Any label changes to the previous fields will generate new hashes and could produce false positives in the output. **Be sure to verify the output!**
+There is a caveat with this approach,  a cryptographic hash is different when you hash words like `Foo` vs `foo`, even though the words are semantically the same. Any label changes to the previous fields will generate new hashes and could produce false positives (additions) in the output file. **Be sure to verify the output!**
 
 

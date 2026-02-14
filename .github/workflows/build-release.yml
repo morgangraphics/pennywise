@@ -84,7 +84,7 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
-          cp linux-build/pennywise release-assets/pennywise-linux
+          cp linux-build/pennywise release-assets/pennywise
           cp windows-build/pennywise.exe release-assets/pennywise.exe
       
       - name: Create Release and Upload Assets
@@ -97,7 +97,7 @@ jobs:
             
             **Linux:**
             ```bash
-            ./pennywise-linux -i input.docx -o output.csv
+            ./pennywise -i input.docx -o output.csv
             ```
             
             **Windows:**
@@ -107,5 +107,5 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            release-assets/pennywise-linux
+            release-assets/pennywise
             release-assets/pennywise.exe
