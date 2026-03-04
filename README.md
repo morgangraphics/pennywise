@@ -88,8 +88,8 @@ Heading 2 as Neighborhood
 becomes
 
 ```txt
-H2 Downtown Dinsey - Marketplace
-H3 World of Dinsey
+H2 Downtown Disney - Marketplace
+H3 World of Disney
 H4 2024
 ```
 
