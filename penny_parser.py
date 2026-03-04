@@ -373,7 +373,7 @@ class PennyParser:
           If more than 2 lines:
             Line 2 = Neighborhood
             Lines 3+ joined with " - " = combined location string
-            Split combined on dash separators between word boundaries (commas are ignored):
+            Split combined on separators (dash between word boundaries):
               first part  -> appended to Neighborhood: "Neighborhood - first_part"
               remaining   -> Location
 
