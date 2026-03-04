@@ -650,14 +650,17 @@ class PennyParser:
                         """
                         H3 = Location.
 
-                        If H3 contains a separator (dash/comma between word boundaries):
-                          - Split on separator
+                        If H3 contains a dash separator between word boundaries:
+                          - Split on the dash separator
                           - first_part appended to H2 Neighborhood:
                               "H2-Neighborhood - first_part"
                           - remaining parts -> Location
-                        If H3 has no separator:
+                        If H3 has no such separator:
                           - Location = H3 text
                           - Neighborhood unchanged (what H2 set)
+
+                        Note: Commas are not treated as separators; they may appear in names
+                        (e.g., "Something, Inc.") without triggering a split.
                         """
                         self.logger.info(f"LEVEL 3 Heading detected: {text}")
 
