@@ -41,7 +41,6 @@ class PennyParser:
         self.labels_logger = self.setup_logging(
             "labels.log", logger_name=f"{__name__}.labels", with_console=False
         )
-        self.short_location = False
         self.write_mode = "w"
         self.new_only = False
         self.multi_line_dash = False
@@ -651,14 +650,17 @@ class PennyParser:
                         """
                         H3 = Location.
 
-                        If H3 contains a separator (dash/comma between word boundaries):
-                          - Split on separator
+                        If H3 contains a dash separator between word boundaries:
+                          - Split on the dash separator
                           - first_part appended to H2 Neighborhood:
                               "H2-Neighborhood - first_part"
                           - remaining parts -> Location
-                        If H3 has no separator:
+                        If H3 has no such separator:
                           - Location = H3 text
                           - Neighborhood unchanged (what H2 set)
+
+                        Note: Commas are not treated as separators; they may appear in names
+                        (e.g., "Something, Inc.") without triggering a split.
                         """
                         self.logger.info(f"LEVEL 3 Heading detected: {text}")
 
@@ -889,7 +891,6 @@ class PennyParser:
         self,
         input_file: str,
         output_file: str,
-        append_loc: bool,
         new_only: bool = False,
         multi_line_dash: bool = False,
         write_mode_override: str = None,
@@ -900,7 +901,6 @@ class PennyParser:
         Args:
             input_file (str): Path to input DOCX file.
             output_file (str): Path to output CSV file.
-            append_loc (bool): Whether to append location to neighborhood.
             new_only (bool): Only extract pennies not in database.
             multi_line_dash (bool): Allow dash separator in multi-line descriptions.
             write_mode_override (str): Override write mode ('w' or 'a'). If None, prompt user.
@@ -981,7 +981,6 @@ class PennyParser:
                 else:
                     print("Invalid choice. Please enter 1, 2, 3, or 4.")
 
-        self.short_location = append_loc
         self.write_mode = write_mode
         self.new_only = new_only
         self.multi_line_dash = multi_line_dash
@@ -996,7 +995,6 @@ class PennyParser:
         self,
         input_file: str,
         output_file: str,
-        append_loc: bool,
         multi_line_dash: bool,
         new_only: bool = False,
         write_mode_override: str = None,
@@ -1005,7 +1003,6 @@ class PennyParser:
         return self.run(
             input_file,
             output_file,
-            append_loc,
             new_only,
             multi_line_dash,
             write_mode_override,
@@ -1035,14 +1032,6 @@ def parse_arguments(args=None):
 
     parser.add_argument(
         "--output", "-o", required=True, help="Path to output .csv file"
-    )
-
-    parser.add_argument(
-        "--short-location",
-        "-sl",
-        dest="short_loc",
-        action="store_true",
-        help="Keep Short Location if present. e.g. Big Top Toys instead of Buena Vista Street - Big Top Toys",
     )
 
     parser.add_argument(
@@ -1090,7 +1079,6 @@ def main():
             penny_parser.run_file(
                 str(docx_file),
                 args.output,
-                args.short_loc,
                 args.multi_line_dash,
                 args.new_only,
                 write_mode_override=output_mode,
@@ -1100,7 +1088,6 @@ def main():
         penny_parser.run(
             args.input,
             args.output,
-            append_loc=args.short_loc,
             new_only=args.new_only,
             multi_line_dash=args.multi_line_dash,
         )

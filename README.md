@@ -74,7 +74,7 @@ I've reworked the parsing a bit so that it's easier to deal with. It's always Ci
 
 **Rule of thumb**
 
-If a Heading 2 has Heading 3 below it, the Heading 2 becomes the base of the Neighborhood. I
+If a Heading 2 has Heading 3 below it, the Heading 2 becomes the base of the Neighborhood, and the Heading 3 entries define specific Locations within that Neighborhood.
 
 Heading 2 as Neighborhood
 ```txt
@@ -88,8 +88,8 @@ Heading 2 as Neighborhood
 becomes
 
 ```txt
-H2 Downtown Dinsey - Marketplace
-H3 World of Dinsey
+H2 Downtown Disney - Marketplace
+H3 World of Disney
 H4 2024
 ```
 
@@ -147,7 +147,6 @@ pennywise --input file.docx --output file.csv [options]
 |-------|------|-------------|
 | `-i` | `--input` | Path to input .docx file (required) |
 | `-o` | `--output` | Path to output .csv file (required) |
-| `-sl` | `--short-location` | Keep Short Location if present (e.g., "Big Top Toys" instead of "Buena Vista Street - Big Top Toys") |
 | `-mld` | `--multi-line-dash` | Allow dash separator in multi-line descriptions (e.g., "The Aristocats\n Something" becomes "The Aristocats - Something") |
 | `-n` | `--new-only` | Only extract NEW pennies not already in the database |
 | `-h` | `--help` | A help message of all flags |
