@@ -74,7 +74,7 @@ I've reworked the parsing a bit so that it's easier to deal with. It's always Ci
 
 **Rule of thumb**
 
-If a Heading 2 has Heading 3 below it, the Heading 2 becomes the base of the Neighborhood. I
+If a Heading 2 has Heading 3 below it, the Heading 2 becomes the base of the Neighborhood, and the Heading 3 entries define specific Locations within that Neighborhood.
 
 Heading 2 as Neighborhood
 ```txt
