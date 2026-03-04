@@ -578,6 +578,9 @@ class PennyParser:
         # Initialize row_data so tables before any Heading 1 don't crash
         row_data = row_dict.copy()
 
+        # Initialize row_data so tables before any Heading 1 don't crash
+        row_data = row_dict.copy()
+
         # Iterate through document body elements in order (maintains document flow)
         for element in document.element.body:
             # Check if it's a paragraph
