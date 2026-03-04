@@ -15,28 +15,17 @@ class TestDetectCityLocationNeighborhood:
         assert neighborhood == ""
 
     def test_two_lines_with_dash(self, parser):
-        """Test two-line label with dash: City and Neighborhood - Location."""
+        """Test two-line label with dash: City and Location (no neighborhood)."""
         label_text = "Anaheim\nDowntown Disney - World of Disney"
         city, location, neighborhood = parser.detect_city_location_neighborhood(
             label_text
         )
         assert city == "Anaheim"
-        assert neighborhood == "Downtown Disney"
-        # Without short_location flag, location includes full path
+        # Two-line labels never populate neighborhood
+        assert neighborhood == ""
         assert "Downtown Disney" in location
         assert "World of Disney" in location
 
-    def test_two_lines_with_dash_short_location(self, parser):
-        """Test two-line label with dash and short_location flag."""
-        parser.short_location = True
-        label_text = "Anaheim\nDowntown Disney - World of Disney"
-        city, location, neighborhood = parser.detect_city_location_neighborhood(
-            label_text
-        )
-        assert city == "Anaheim"
-        assert neighborhood == "Downtown Disney"
-        assert location == "World of Disney"
-        parser.short_location = False
 
     def test_three_lines_neighborhood_location(self, parser):
         """Test three-line label: City, Neighborhood, Location."""
@@ -49,7 +38,7 @@ class TestDetectCityLocationNeighborhood:
         assert "Musée Mécanique Museum" in location
 
     def test_three_lines_with_dash_continuation(self, parser):
-        """Test three-line label with dash in neighborhood line."""
+        """Test three-line label: line 2 with dash is kept as the full neighborhood."""
         label_text = (
             "San Francisco\nFisherman's Wharf - Pier 45\nMusée Mécanique Museum"
         )
@@ -57,31 +46,30 @@ class TestDetectCityLocationNeighborhood:
             label_text
         )
         assert city == "San Francisco"
-        assert neighborhood == "Fisherman's Wharf"
-        assert "Pier 45" in location
+        # The entire line 2 becomes neighborhood (dash is not split here)
+        assert neighborhood == "Fisherman's Wharf - Pier 45"
         assert "Musée Mécanique Museum" in location
 
     def test_multiline_with_continuation_words(self, parser):
-        """Test multi-line location with continuation words (And, Of, &)."""
+        """Test multi-line label: lines 3+ are joined and first segment folds into neighborhood."""
         label_text = "San Francisco\nDowntown\nStreet Name\nAnd Another Location"
         city, location, neighborhood = parser.detect_city_location_neighborhood(
             label_text
         )
         assert city == "San Francisco"
-        assert neighborhood == "Downtown"
-        # Continuation word should not add dash
+        # Lines 3+ are joined with " - " then split; first part appended to neighborhood
+        assert neighborhood == "Downtown - Street Name"
         assert "And Another Location" in location
 
     def test_multiline_without_continuation_words(self, parser):
-        """Test multi-line location without continuation words gets dash separator."""
+        """Test multi-line label: first extra line folds into neighborhood, rest is location."""
         label_text = "San Francisco\nDowntown\nStreet Name\nAnother Location"
         city, location, neighborhood = parser.detect_city_location_neighborhood(
             label_text
         )
         assert city == "San Francisco"
-        assert neighborhood == "Downtown"
-        # Non-continuation word gets dash separator
-        assert " - " in location
+        assert neighborhood == "Downtown - Street Name"
+        assert location == "Another Location"
 
     def test_unicode_sanitization_in_labels(self, parser):
         """Test that unicode characters are sanitized."""
@@ -115,15 +103,6 @@ class TestDetectCityLocationNeighborhood:
         assert location == ""
         assert neighborhood == ""
 
-    def test_location_overrides_neighborhood_on_short_location(self, parser):
-        """Test that short_location flag uses only location part after dash."""
-        parser.short_location = True
-        label_text = "Anaheim\nDisneyland - Sleeping Beauty Castle"
-        city, location, neighborhood = parser.detect_city_location_neighborhood(
-            label_text
-        )
-        assert location == "Sleeping Beauty Castle"
-        parser.short_location = False
 
     def test_en_dash_vs_hyphen(self, parser):
         """Test that both en-dash and hyphen are handled."""

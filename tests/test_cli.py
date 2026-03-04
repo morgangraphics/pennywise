@@ -47,7 +47,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with correct input argument
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=False, new_only=False, multi_line_dash=False
+                "test.docx", "output.csv", new_only=False, multi_line_dash=False
             )
 
     def test_output_short_form(self, mock_parser_and_path):
@@ -62,27 +62,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with correct arguments
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=False, new_only=False, multi_line_dash=False
-            )
-
-    def test_short_location_flag(self, mock_parser_and_path):
-        """Test -sl / --short-location flag."""
-        from penny_parser import main
-        from penny_parser import parse_arguments
-
-        # Test that -sl flag is recognized and sets short_loc to True
-        args = parse_arguments(["-i", "test.docx", "-o", "output.csv", "-sl"])
-        assert args.short_loc is True
-
-        with patch.object(
-            sys,
-            "argv",
-            ["penny_parser.py", "-i", "test.docx", "-o", "output.csv", "-sl"],
-        ):
-            main()
-            # Verify run was called with short_loc=True
-            mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=True, new_only=False, multi_line_dash=False
+                "test.docx", "output.csv", new_only=False, multi_line_dash=False
             )
 
     def test_multi_line_dash_flag(self, mock_parser_and_path):
@@ -97,7 +77,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with multi_line_dash=True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=False, new_only=False, multi_line_dash=True
+                "test.docx", "output.csv", new_only=False, multi_line_dash=True
             )
 
     def test_new_only_flag(self, mock_parser_and_path):
@@ -112,7 +92,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with new_only=True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=False, new_only=True, multi_line_dash=False
+                "test.docx", "output.csv", new_only=True, multi_line_dash=False
             )
 
     def test_all_flags_together(self, mock_parser_and_path):
@@ -129,7 +109,6 @@ class TestArgumentParsing:
                 "test.docx",
                 "-o",
                 "output.csv",
-                "-sl",
                 "-mld",
                 "-n",
             ],
@@ -137,7 +116,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with all flags set to True
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=True, new_only=True, multi_line_dash=True
+                "test.docx", "output.csv", new_only=True, multi_line_dash=True
             )
 
     def test_long_form_arguments(self, mock_parser_and_path):
@@ -154,7 +133,6 @@ class TestArgumentParsing:
                 "test.docx",
                 "--output",
                 "output.csv",
-                "--short-location",
                 "--multi-line-dash",
                 "--new-only",
             ],
@@ -162,7 +140,7 @@ class TestArgumentParsing:
             main()
             # Verify run was called with all flags set to True using long form
             mock_parser_and_path.run.assert_called_once_with(
-                "test.docx", "output.csv", append_loc=True, new_only=True, multi_line_dash=True
+                "test.docx", "output.csv", new_only=True, multi_line_dash=True
             )
 
     def test_help_flag(self):

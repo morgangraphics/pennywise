@@ -67,7 +67,6 @@ Tests for text parsing and sanitization:
 Tests for city/location/neighborhood detection:
 - `TestDetectCityLocationNeighborhood`: Label parsing logic
 - Tests valid/invalid label formats
-- Tests short_location flag behavior
 - Tests unicode handling
 
 ### `test_parser_orientation.py`
@@ -95,7 +94,7 @@ Tests for PennyDatabase class:
 ### `test_integration_ca_docx.py`
 Integration tests using the actual ca.docx file:
 - `TestParsingCaDocx`: Full document parsing
-- Tests all flags (short_location, multi_line_dash, new_only)
+- Tests all flags (multi_line_dash, new_only)
 - Tests output CSV generation
 - `TestH2H3MapBuilder`: Heading hierarchy detection
 - `TestRowsFromVerticalPairs`: Table cell pairing logic

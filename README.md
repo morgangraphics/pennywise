@@ -147,7 +147,6 @@ pennywise --input file.docx --output file.csv [options]
 |-------|------|-------------|
 | `-i` | `--input` | Path to input .docx file (required) |
 | `-o` | `--output` | Path to output .csv file (required) |
-| `-sl` | `--short-location` | Keep Short Location if present (e.g., "Big Top Toys" instead of "Buena Vista Street - Big Top Toys") |
 | `-mld` | `--multi-line-dash` | Allow dash separator in multi-line descriptions (e.g., "The Aristocats\n Something" becomes "The Aristocats - Something") |
 | `-n` | `--new-only` | Only extract NEW pennies not already in the database |
 | `-h` | `--help` | A help message of all flags |
