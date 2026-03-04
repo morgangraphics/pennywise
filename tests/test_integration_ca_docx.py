@@ -131,22 +131,6 @@ class TestParsingCaDocx:
             csv_rows = list(reader)
             assert len(csv_rows) == len(rows)
 
-    def test_parse_with_short_location_flag(self, parser, ca_docx_path):
-        """Test parsing with short_location flag."""
-        parser.short_location = False
-        rows_full = parser.parse_docx_to_rows(str(ca_docx_path))
-
-        parser.short_location = True
-        rows_short = parser.parse_docx_to_rows(str(ca_docx_path))
-
-        # Both should have same number of rows
-        assert len(rows_full) == len(rows_short)
-        # Short location should have shorter or equal location strings
-        for full_row, short_row in zip(rows_full, rows_short):
-            assert len(short_row["Location"]) <= len(full_row["Location"])
-
-        parser.short_location = False
-
     def test_parse_with_multi_line_dash_flag(self, parser, ca_docx_path):
         """Test parsing with multi_line_dash flag."""
         parser.multi_line_dash = False

@@ -41,7 +41,6 @@ class PennyParser:
         self.labels_logger = self.setup_logging(
             "labels.log", logger_name=f"{__name__}.labels", with_console=False
         )
-        self.short_location = False
         self.write_mode = "w"
         self.new_only = False
         self.multi_line_dash = False
@@ -367,17 +366,24 @@ class PennyParser:
         """
         Parse a top label cell text into (city, location, neighborhood).
 
-        The label text is multi-line with structure:
-        Line 1: City
-        Line 2: Neighborhood (or Neighborhood - Location if has dash)
-        Line 3+: Location (may continue with dashes or spaces)
+        Rules:
+          Line 1: City
+          If exactly 2 lines:
+            Line 2 = Location (neighborhood stays empty)
+          If more than 2 lines:
+            Line 2 = Neighborhood
+            Lines 3+ joined with " - " = combined location string
+            Split combined on separators (dash between word boundaries):
+              first part  -> appended to Neighborhood: "Neighborhood - first_part"
+              remaining   -> Location
 
         EXAMPLE:
-            Santa Monica
-            Santa Monica Pier
-            Bubba Gump Shrimp Company
+            Bay Lake
+            Disney's Hollywood Studios
+            Echo Lake
+            Frozen Fractal Gifts
             =>
-            ('Santa Monica', 'Bubba Gump Shrimp Company', 'Santa Monica Pier')
+            ('Bay Lake', 'Frozen Fractal Gifts', "Disney's Hollywood Studios - Echo Lake")
 
         Args:
             label_text (str): The raw label text from table cell.
@@ -385,100 +391,44 @@ class PennyParser:
         Returns:
             tuple: (city, location, neighborhood)
         """
+        # Separator: word-boundary dashes only (excludes hyphenated words like Buc-ees)
+        # Commas are intentionally excluded — business names like "Inc." or "Pub & Inn"
+        # contain commas that must not be treated as location separators.
+        sep_regex = r"(?<![\w])[-\u2013\u2014](?![\w])"
+
         city = ""
         location = ""
         neighborhood = ""
 
-        lines = label_text.splitlines()
+        lines = [ln.strip() for ln in label_text.splitlines() if ln.strip()]
 
-        for i, line in enumerate(lines):
-            if i == 0:
-                # First line is always the city
-                city = self.sanitize_for_csv(line.strip())
+        if not lines:
+            return city, location, neighborhood
 
-            elif i == 1 and len(lines) == 2:
-                # Two lines total: City and Location (could have dash for neighborhood)
-                if re.search(self.dash_regex, line):
-                    # Has dash: Line is "Neighborhood – Location"
-                    temp = self.split_and_strip(line)
-                    neighborhood = self.sanitize_for_csv(temp[0])
-                    if self.short_location:
-                        # Keep only the short location (after dash)
-                        location = self.sanitize_for_csv(" ".join(temp[1:]).strip())
-                    else:
-                        # Keep full "Neighborhood - Location" format
-                        location = self.sanitize_for_csv(" - ".join(temp).strip())
-                else:
-                    # No dash: Line is just Location
-                    location = self.sanitize_for_csv(line.strip())
+        # Line 1 is always the city
+        city = self.sanitize_for_csv(lines[0])
 
-            elif i == 1 and len(lines) > 2:
-                # More than two lines: Second line is neighborhood
-                if re.search(self.dash_regex, line):
-                    # Has dash: Split into neighborhood and location part
-                    temp = self.split_and_strip(line)
-                    neighborhood = self.sanitize_for_csv(temp[0])
-                    if self.short_location:
-                        # Keep only the short location (after dash)
-                        location = self.sanitize_for_csv(" ".join(temp[1:]).strip())
-                    else:
-                        # Keep full "Neighborhood - Location" format
-                        location = self.sanitize_for_csv(" - ".join(temp).strip())
-                else:
-                    # No dash: Line is neighborhood only, location comes from line 3+
-                    neighborhood = self.sanitize_for_csv(line.strip())
-                    location = ""  # Will be filled by subsequent lines
+        if len(lines) == 2:
+            # Exactly two lines: Line 2 is the Location (no neighborhood)
+            location = self.sanitize_for_csv(lines[1])
 
-            elif i >= 2:
-                # Third line onwards: Additional location details
-                if re.search(self.dash_regex, line):
-                    # Has dash in line
-                    temp = self.split_and_strip(line)
-                    if neighborhood == "":
-                        neighborhood = self.sanitize_for_csv(temp[0])
+        elif len(lines) > 2:
+            # Line 2 is the Neighborhood
+            neighborhood = self.sanitize_for_csv(lines[1])
 
-                    if self.short_location:
-                        # Keep only the location part (after dash)
-                        location = (
-                            self.sanitize_for_csv(" ".join(temp[1:]).strip())
-                            if len(temp) > 1
-                            else self.sanitize_for_csv(line.strip())
-                        )
-                    else:
-                        # Append full line to location
-                        if location != "":
-                            location = (
-                                location + " - " + self.sanitize_for_csv(line.strip())
-                            )
-                        else:
-                            location = self.sanitize_for_csv(line.strip())
-                else:
-                    # No dash: Continuation of location
-                    # Check if line starts with continuation words (And, Of, etc.)
-                    spacer = (
-                        " "
-                        if line.strip().startswith(self.continuation_words)
-                        else " - "
-                    )
+            # Lines 3+ combined with " - "
+            combined = " - ".join(lines[2:])
 
-                    if self.short_location:
-                        # Use this line as the location (last line wins)
-                        location = self.sanitize_for_csv(line).strip()
-                    else:
-                        # Prepend neighborhood if location is empty
-                        if location == "" and neighborhood != "":
-                            location = (
-                                neighborhood
-                                + spacer
-                                + self.sanitize_for_csv(line).strip()
-                            )
-                        elif location != "":
-                            # Append to existing location
-                            location = (
-                                location + spacer + self.sanitize_for_csv(line).strip()
-                            )
-                        else:
-                            location = self.sanitize_for_csv(line).strip()
+            # Split combined location on separators
+            parts = self.split_and_strip(combined, sep_regex)
+            parts = [p for p in parts if p]  # remove empty strings
+
+            if len(parts) > 1:
+                # First part appended to neighborhood
+                neighborhood = neighborhood + " - " + self.sanitize_for_csv(parts[0])
+                location = self.sanitize_for_csv(" - ".join(parts[1:]))
+            else:
+                location = self.sanitize_for_csv(combined)
 
         return city, location, neighborhood
 
@@ -603,6 +553,7 @@ class PennyParser:
         h2_has_h3_map = self.build_h2_h3_map(document)
 
         csv_rows = []
+        new_pennies = []  # Collect new pennies for batch insert at the end
         row_dict = {
             "State": "",
             "City": "",
@@ -621,6 +572,7 @@ class PennyParser:
 
         current_set = 0  # Counter for sets within a year
         last_year = None  # Track the last year to detect when it changes
+        current_h2_neighborhood = ""  # Track original H2 neighborhood for H3s to reference
 
         # Initialize row_data so tables before any Heading 1 don't crash
         row_data = row_dict.copy()
@@ -662,6 +614,7 @@ class PennyParser:
                         )
                         current_set = 0  # Reset set counter for new city
                         last_year = None  # reset year
+                        current_h2_neighborhood = ""  # reset H2 neighborhood for new city
 
                     elif "heading 2" in style_name:
                         # H2 can be a neighborhood OR a neighborhood+location
@@ -672,87 +625,75 @@ class PennyParser:
                         h2_has_h3 = h2_has_h3_map.get(text, False)
 
                         if h2_has_h3:
-                            # H2 is just the neighborhood, H3s will be the locations
+                            # H2 is the neighborhood; H3s will supply the location
+                            current_h2_neighborhood = self.sanitize_for_csv(text)
                             row_data.update(
                                 {
-                                    #"Neighborhood": self.sanitize_for_csv(text),
-                                     "Neighborhood": "",
+                                    "Neighborhood": current_h2_neighborhood,
                                     "Location": "",
                                 }
                             )
                         else:
-                            # H2 is the location (Neighborhood intentionally empty)
-                            if self.short_location:
-                                # short_location: Location is empty, only Neighborhood is set
-                                row_data.update(
-                                    {
-                                        #"Neighborhood": self.sanitize_for_csv(text),
-                                        "Neighborhood": "",
-                                        "Location": "",
-                                    }
-                                )
-                            else:
-                                # full format: Location matches Neighborhood
-                                row_data.update(
-                                    {
-                                        #"Neighborhood": self.sanitize_for_csv(text),
-                                        "Neighborhood": "",
-                                        "Location": self.sanitize_for_csv(text),
-                                    }
-                                )
+                            # H2 is a standalone location; neighborhood stays empty
+                            current_h2_neighborhood = ""
+                            row_data.update(
+                                {
+                                    "Neighborhood": "",
+                                    "Location": self.sanitize_for_csv(text),
+                                }
+                            )
 
                     elif "heading 3" in style_name:
                         """
-                        H3 can be:
-                        1. Just a location (when H2 has multiple H3s)
-                           e.g. H2="Boardwalk" -> H3="Boardwalk Arcade"
+                        H3 = Location.
 
-                        2. Neighborhood - Location (when H3 contains dash)
-                           e.g. H3="Beech Street – Alcatraz Mini Mart"
-                           Parse: neighborhood="Beech Street", location="Alcatraz Mini Mart"
+                        If H3 contains a dash separator between word boundaries:
+                          - Split on the dash separator
+                          - first_part appended to H2 Neighborhood:
+                              "H2-Neighborhood - first_part"
+                          - remaining parts -> Location
+                        If H3 has no such separator:
+                          - Location = H3 text
+                          - Neighborhood unchanged (what H2 set)
+
+                        Note: Commas are not treated as separators; they may appear in names
+                        (e.g., "Something, Inc.") without triggering a split.
                         """
                         self.logger.info(f"LEVEL 3 Heading detected: {text}")
 
-                        # Save the current neighborhood from H2 before updating location
-                        current_neighborhood = row_data.get("Neighborhood", "")
+                        # Separator: word-boundary dashes only (excludes hyphenated words like Buc-ees)
+                        # Commas are intentionally excluded — business names like "Inc." or "Pub & Inn"
+                        # contain commas that must not be treated as location separators.
+                        sep_regex = r"(?<![\w])[-\u2013\u2014](?![\w])"
 
-                        # Check if H3 contains a dash (neighborhood - location format)
-                        if re.search(self.dash_regex, text):
-                            # Split on dash
-                            parts = self.split_and_strip(text)
-                            neighborhood = parts[0]
-                            location = " ".join(parts[1:])
-                        else:
-                            # H3 is just the location, use current neighborhood from H2
-                            #neighborhood = current_neighborhood
-                            neighborhood = ""
-                            location = text
+                        # Use the original H2 neighborhood (not what a previous H3 wrote)
+                        h2_neighborhood = current_h2_neighborhood
 
-                        # Update row_data with parsed neighborhood and location
-                        # Preserves State, City, Year, and other context from parent headings
-                        if self.short_location:
-                            # short_location: Only use the location part after the dash
-                            row_data.update(
-                                {
-                                    #"Neighborhood": self.sanitize_for_csv(neighborhood),
-                                    "Neighborhood": "",
-                                    "Location": self.sanitize_for_csv(location),
-                                }
-                            )
+                        if re.search(sep_regex, text):
+                            # Split H3 on separator
+                            parts = self.split_and_strip(text, sep_regex)
+                            parts = [p for p in parts if p]
+                            first_part = parts[0]
+                            remaining = " - ".join(parts[1:]) if len(parts) > 1 else ""
+
+                            # Append first_part to H2 neighborhood
+                            if h2_neighborhood:
+                                neighborhood = h2_neighborhood + " - " + self.sanitize_for_csv(first_part)
+                            else:
+                                neighborhood = self.sanitize_for_csv(first_part)
+
+                            location = self.sanitize_for_csv(remaining)
                         else:
-                            # full format: Combine neighborhood and location
-                            full_location = (
-                                f"{neighborhood} - {location}"
-                                if neighborhood
-                                else location
-                            )
-                            row_data.update(
-                                {
-                                    #"Neighborhood": self.sanitize_for_csv(neighborhood),
-                                    "Neighborhood": "",
-                                    "Location": self.sanitize_for_csv(full_location),
-                                }
-                            )
+                            # No separator: H3 is purely the location
+                            neighborhood = h2_neighborhood
+                            location = self.sanitize_for_csv(text)
+
+                        row_data.update(
+                            {
+                                "Neighborhood": neighborhood,
+                                "Location": location,
+                            }
+                        )
 
                         # Reset year after reaching a new level 3 heading
                         last_year = None
@@ -883,9 +824,9 @@ class PennyParser:
                         # Check if penny exists in database
                         is_new = not self.db.penny_exists(row_to_append)
 
-                        # If penny is new, add it to database
+                        # If penny is new, add to batch for later insertion
                         if is_new:
-                            self.db.add_penny(row_to_append)
+                            new_pennies.append(row_to_append)
                             self.logger.debug(
                                 f"New penny found: {row_to_append['Name']} at {row_to_append['Location']}"
                             )
@@ -904,6 +845,11 @@ class PennyParser:
                             csv_rows.append(row_to_append)
 
                         position_stor.update({stor_hash: position})
+
+        # Batch insert all new pennies at the end
+        if new_pennies:
+            added_count = self.db.add_pennies_batch(new_pennies)
+            self.logger.info(f"Added {added_count} new pennies to database")
 
         return csv_rows
 
@@ -932,7 +878,7 @@ class PennyParser:
         ]
 
         with open(out_path, self.write_mode, newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=header)
+            writer = csv.DictWriter(f, fieldnames=header, quoting=csv.QUOTE_ALL)
             # Only write header if creating new file
             if self.write_mode == "w":
                 writer.writeheader()
@@ -942,7 +888,6 @@ class PennyParser:
         self,
         input_file: str,
         output_file: str,
-        append_loc: bool,
         new_only: bool = False,
         multi_line_dash: bool = False,
         write_mode_override: str = None,
@@ -953,7 +898,6 @@ class PennyParser:
         Args:
             input_file (str): Path to input DOCX file.
             output_file (str): Path to output CSV file.
-            append_loc (bool): Whether to append location to neighborhood.
             new_only (bool): Only extract pennies not in database.
             multi_line_dash (bool): Allow dash separator in multi-line descriptions.
             write_mode_override (str): Override write mode ('w' or 'a'). If None, prompt user.
@@ -1034,7 +978,6 @@ class PennyParser:
                 else:
                     print("Invalid choice. Please enter 1, 2, 3, or 4.")
 
-        self.short_location = append_loc
         self.write_mode = write_mode
         self.new_only = new_only
         self.multi_line_dash = multi_line_dash
@@ -1049,7 +992,6 @@ class PennyParser:
         self,
         input_file: str,
         output_file: str,
-        append_loc: bool,
         multi_line_dash: bool,
         new_only: bool = False,
         write_mode_override: str = None,
@@ -1058,7 +1000,6 @@ class PennyParser:
         return self.run(
             input_file,
             output_file,
-            append_loc,
             new_only,
             multi_line_dash,
             write_mode_override,
@@ -1088,14 +1029,6 @@ def parse_arguments(args=None):
 
     parser.add_argument(
         "--output", "-o", required=True, help="Path to output .csv file"
-    )
-
-    parser.add_argument(
-        "--short-location",
-        "-sl",
-        dest="short_loc",
-        action="store_true",
-        help="Keep Short Location if present. e.g. Big Top Toys instead of Buena Vista Street - Big Top Toys",
     )
 
     parser.add_argument(
@@ -1143,7 +1076,6 @@ def main():
             penny_parser.run_file(
                 str(docx_file),
                 args.output,
-                args.short_loc,
                 args.multi_line_dash,
                 args.new_only,
                 write_mode_override=output_mode,
@@ -1153,7 +1085,6 @@ def main():
         penny_parser.run(
             args.input,
             args.output,
-            append_loc=args.short_loc,
             new_only=args.new_only,
             multi_line_dash=args.multi_line_dash,
         )

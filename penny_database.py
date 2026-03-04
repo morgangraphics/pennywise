@@ -124,6 +124,51 @@ class PennyDatabase:
             # Penny already exists
             return False
 
+    def add_pennies_batch(self, penny_dicts: list) -> int:
+        """
+        Add multiple pennies to the database in a single transaction.
+
+        Args:
+            penny_dicts (list): List of dictionaries containing penny data.
+
+        Returns:
+            int: Number of pennies successfully added.
+        """
+        if not penny_dicts:
+            return 0
+
+        added_count = 0
+        for penny_dict in penny_dicts:
+            normalized = self._normalize_keys(penny_dict)
+            hash_val = self._hash_penny(normalized)
+            try:
+                self.conn.execute(
+                    """
+                    INSERT INTO pennies 
+                    (state, city, neighborhood, location, name, orientation, type, year, position, hash)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        normalized.get("state", ""),
+                        normalized.get("city", ""),
+                        normalized.get("neighborhood", ""),
+                        normalized.get("location", ""),
+                        normalized.get("name", ""),
+                        normalized.get("orientation", ""),
+                        normalized.get("type", ""),
+                        normalized.get("year", ""),
+                        normalized.get("position", ""),
+                        hash_val,
+                    ),
+                )
+                added_count += 1
+            except sqlite3.IntegrityError:
+                # Penny already exists, skip
+                pass
+
+        self.conn.commit()
+        return added_count
+
     def get_penny_count(self) -> int:
         """
         Get total number of unique pennies in database.

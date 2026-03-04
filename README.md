@@ -70,19 +70,27 @@ This is pretty self-explanatory. I like to organize my collection by State and t
 > A drawback to using Microsoft Word is that sorting doesn't happen automatically. However, Microsoft Word is pretty forgiving with copying and pasting. 
 
 #### Heading 2 = Neighborhood or Location
-The Neighborhood/Location breakdown makes a lot of sense until it doesn't, so there is some flexibility here depending on the situation. In the [ca.docx file](./pennies/labels/ca.docx) example, Disneyland isn't a neighborhood, it's an amusement park in Anaheim. In Long Beach. In San Francisco Chinatown is an actual neighborhood. So, you can see the issue here. The neighborhood scenario shows up more often in the documents than the amusement park, so this script leans towards neighborhood/location scenario even if everything doesn't fit nicely into that categorization
+I've reworked the parsing a bit so that it's easier to deal with. It's always City - Neighborhood/Location - Location
 
 **Rule of thumb**
 
-If a Heading 2 has Heading 3 below it, the Heading 2 becomes the Neighborhood. If there are no Heading 3 under the Heading 2, Heading 2 is the location. 
+If a Heading 2 has Heading 3 below it, the Heading 2 becomes the base of the Neighborhood, and the Heading 3 entries define specific Locations within that Neighborhood.
 
 Heading 2 as Neighborhood
 ```txt
-    H2 Downtown Disney         <= Neighborhood
-        H3 World of Disney     <= Location
-            H4 2024            <= Year
-            H4 2025            <= Year
-        H3 Wetzel's Pretzles   <= Location
+    H2 Downtown Disney                      <= Neighborhood
+        H3 Marketplace, World of Disney     <= Location
+            H4 2024                         <= Year
+            H4 2025                         <= Year
+        H3 Marketplace, Wetzel's Pretzles   <= Location
+```
+
+becomes
+
+```txt
+H2 Downtown Disney - Marketplace
+H3 World of Disney
+H4 2024
 ```
 
 Heading 2 as Location
@@ -139,7 +147,6 @@ pennywise --input file.docx --output file.csv [options]
 |-------|------|-------------|
 | `-i` | `--input` | Path to input .docx file (required) |
 | `-o` | `--output` | Path to output .csv file (required) |
-| `-sl` | `--short-location` | Keep Short Location if present (e.g., "Big Top Toys" instead of "Buena Vista Street - Big Top Toys") |
 | `-mld` | `--multi-line-dash` | Allow dash separator in multi-line descriptions (e.g., "The Aristocats\n Something" becomes "The Aristocats - Something") |
 | `-n` | `--new-only` | Only extract NEW pennies not already in the database |
 | `-h` | `--help` | A help message of all flags |
